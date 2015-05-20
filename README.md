@@ -1,4 +1,4 @@
-atk-config
+atk_config
 ==========
 
 atk config
