@@ -1,0 +1,21 @@
+{
+    "cdh": {
+        "hdfs": {
+            "datanode": {
+                "hdfs_datanode_base": {
+                    "dfs_datanode_failed_volumes_tolerated": "6"
+                }
+            }
+        }
+    },
+    "atk": {
+        "intel": {
+            "analytics": {
+                "api": {
+                    "host": "0.0.0.0",
+                    "port": 9099
+                }
+            }
+        }
+    }
+}
