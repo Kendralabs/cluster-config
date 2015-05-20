@@ -33,6 +33,26 @@ class Hosts(object):
             memory = memory + self.hosts[key].totalPhysMemBytes
         return memory
 
+    def virtualCoresTotal(self):
+        cores = 0
+        for key in self.hosts:
+            cores = cores + self.hosts[key].numCores
+        return cores
+
+    def physicalCoresTotal(self):
+        cores = 0
+        for key in self.hosts:
+            cores = cores + self.hosts[key].numPhysicalCores
+        return cores
+
+    def all(self):
+        nodes = {}
+        for key in self.hosts:
+            nodes[self.hosts[key].hostname] = {"memory": self.hosts[key].totalPhysMemBytes,
+                                               "virtualcores" : self.hosts[key].numCores,
+                                               "physicalcores": self.hosts[key].numPhysicalCores}
+        return nodes
+
 class Roles(object):
     api = None
     roles = None
@@ -44,33 +64,15 @@ class Roles(object):
         self.api = api
         self.__get_host(role)
 
-
     def add(self,role):
         self.roles[role.name] = role
         self.__get_host(role)
-
 
     def __get_host(self, role):
         if self.hosts:
             self.hosts.add(role.hostRef.hostId)
         else:
             self.hosts = Hosts(self.api, role.hostRef.hostId)
-        #self.hosts[role.hostRef.hostId] =  hosts.get_host(self.api, role.hostRef.hostId)
-        #self.host = hosts.get_host(self.api, self.role.hostRef.hostId)
-        """
-        print "hostid", self.hosts[role.hostRef.hostId].hostId
-        print "ip address", self.hosts[role.hostRef.hostId].ipAddress
-        print "hostname", self.hosts[role.hostRef.hostId].hostname
-        print "rackId", self.hosts[role.hostRef.hostId].rackId
-        print "lastHeartbeat", self.hosts[role.hostRef.hostId].lastHeartbeat
-        print "roleRefs", self.hosts[role.hostRef.hostId].roleRefs
-        print "healthSummary", self.hosts[role.hostRef.hostId].healthSummary
-        print "numCores", self.hosts[role.hostRef.hostId].numCores
-        print "numPhysicalCores", self.hosts[role.hostRef.hostId].numPhysicalCores
-        print "totalPhysMemBytes", self.hosts[role.hostRef.hostId].totalPhysMemBytes, type(self.hosts[role.hostRef.hostId].totalPhysMemBytes)
-        """
-
-
 
     def type(self):
         return self.role.type
@@ -119,7 +121,6 @@ class Cluster(object):
         self.services = {}
 
         for service in self.cluster.get_all_services():
-            print service.type
             setattr(self, service.type.lower(), Service(self.api, service))
 
 
