@@ -60,7 +60,7 @@ class Config(object):
     def __init__(self, group, config):
         self.group = group
         self.config = config
-        #pprint(self.conf)
+        #print config.name
 
     def get(self):
         if self.config.value:
@@ -78,6 +78,7 @@ class ConfigGroup(object):
         self.group = group
         self.config = {}
         self.__get_configs()
+        #print "group ", group.name
 
     def __get_configs(self):
         for name, config in self.group.get_config(view='full').items():
@@ -113,6 +114,7 @@ class Roles(object):
         self.__get_host(role)
         self.__get_all_config_groups()
 
+
     def __get_all_config_groups(self):
         for group in role_config_groups.get_all_role_config_groups(self.api, self.service.name, self.cluster.name):
             if group.roleType == self.type:
@@ -136,6 +138,12 @@ class Roles(object):
             self.hosts.add(role.hostRef.hostId)
         else:
             self.hosts = Hosts(self.api, role.hostRef.hostId)
+    def set(self, configGroup, configs):
+        print ""
+        print "roles.set"
+        print configGroup
+        print configs
+        getattr(self, configGroup.lower().replace("-", "_")).set(configs)
 
     def type(self):
         return self.role.type
@@ -153,28 +161,48 @@ class Service(object):
         self.__get_roles()
         #self.__get_all_config_groups()
 
-    """
-    def __get_all_config_groups(self):
-        for group in role_config_groups.get_all_role_config_groups(self.api, self.apiService.name, self.cluster.name):
-            print group
-            #setattr(self, group.name.lower().replace("-", "_").replace(self.apiService.name.lower()+"_", ""), ConfigGroup(group))
-
-            print group.name
-            print group.roleType
-            print group.base
-            print group.config
-            print group.displayName
-            print group.serviceRef
-            setattr(self, group.name.lower().replace("-", "_"), ConfigGroup(group))
-    """
     def __get_roles(self):
-        self.roles = {}
+        self.roles = []
         for role in self.apiService.get_all_roles():
+            self.roles.append(role.name)
             if hasattr(self, role.type.lower()):
                 getattr(self, role.type.lower(), Roles(self.api, self.apiService, self.cluster, role)).add(role)
             else:
                 setattr(self, role.type.lower(), Roles(self.api, self.apiService, self.cluster, role))
 
+    def set(self,role,configGroup,configs):
+        getattr(self, role.lower()).set(configGroup, configs)
+
+    def restart(self):
+        self.apiService.restart()
+        self.poll_commands("Restart")
+        self.deployConfig()
+
+    def deployConfig(self):
+        print self.roles
+        self.apiService.deploy_client_config(*self.roles)
+        self.poll_commands("deployClientConfig")
+
+    def poll_commands(self, command_name):
+        """
+        poll the currently running commands to find out when the config deployment and restart have finished
+
+        :param service: service to pool commands for
+        :param command_name: the command we will be looking for, ie 'Restart'
+        """
+        while True:
+            time.sleep(1)
+            print(" . "),
+            sys.stdout.flush()
+            commands = self.apiService.get_commands(view="full")
+            if commands:
+                for c in commands:
+                    if c.name == command_name:
+                        #active = c.active
+                        break
+            else:
+                break
+        print "\n"
 
     def type(self):
         return self.apiService.type
@@ -202,6 +230,7 @@ class Cluster(object):
         self.services = {}
         #print self.cluster.get_all_services()
         for service in self.cluster.get_all_services():
+            print service.type
             setattr(self, service.type.lower(), Service(self.api, self.cluster, service))
 
 
@@ -237,20 +266,16 @@ class Cluster(object):
             print ("You picked cluster {0}: Cluster Name: {1:20} Version: {2}".format(cluster_index, self.clusters[cluster_index].name, self.clusters[cluster_index].version))
             self.cluster = self.clusters[cluster_index]
 
-    def get_host_memory(self):
-        print "get_host_memory"
+    def deployConfig(self,service):
+        print "deploy config cluster"
+        getattr(self,service.lower()).deployConfig()
 
-    def get_physical_cores(self):
-        print "phy cores"
+    def restart(self, service):
+        getattr(self,service.lower()).restart()
 
-    def get_virtual_cores(self):
-        print "get host cores"
+    def set(self,service,role,configGroup,configs):
+        getattr(self,service.lower()).set(role, configGroup, configs)
 
-    def get_hosts(self):
-        print "get hosts"
-
-    def set(self,type,group,config):
-        print("set cdh")
 
     def get(self,type,group,config):
         print("get cdh")

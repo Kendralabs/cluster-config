@@ -1,9 +1,9 @@
 {
     "cdh": {
-        "hdfs": {
-            "datanode": {
-                "hdfs_datanode_base": {
-                    "dfs_datanode_failed_volumes_tolerated": "6"
+        "HDFS": {
+            "DATANODE": {
+                "hdfs-DATANODE-BASE": {
+                    "dfs_datanode_failed_volumes_tolerated": "5"
                 }
             }
         }

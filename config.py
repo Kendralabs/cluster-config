@@ -5,7 +5,9 @@ from subprocess import call
 from os import system
 import hashlib, re, time, argparse, os, time, sys, getpass
 import codecs
-import atk_config as ac
+import json
+from pprint import pprint
+from atk_config import cdh
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
 parser.add_argument("--host", type=str, help="Cloudera Manager Host", default="127.0.0.1")
@@ -14,10 +16,11 @@ parser.add_argument("--username", type=str, help="Cloudera Manager User Name", d
 parser.add_argument("--password", type=str, help="Cloudera Manager Password", default="admin")
 parser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is managed by "
                                                 "Cloudera Manager.", default="cluster")
+parser.add_argument("--restart", type=str, help="Weather or not to restart CDH services after config changes", default="no")
 
 args = parser.parse_args()
 
-cluster = ac.cdh.Cluster("10.54.8.175", 7180, "admin", "wolverine", "cluster")
+cluster = cdh.Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
 if cluster:
     configJson = None
@@ -26,7 +29,23 @@ if cluster:
         configJson = configJsonOpen.read()
         configJsonOpen.close()
     except IOError:
-        print "cloudn open json file"
+        print("Couldn't find config.json file")
+
+    configJson = json.loads(configJson)
+    pprint(configJson)
+
+    #iterate through services, set cdh congis and possibly restart services
+    for service in configJson["cdh"]:
+        print service
+        #iterate through roles
+        for role in configJson["cdh"][service]:
+            print role
+            #iterate through config groups
+            for configGroup in configJson["cdh"][service][role]:
+                print configGroup
+                cluster.set(service, role, configGroup,configJson["cdh"][service][role][configGroup])
+        if args.restart == "yes":
+            cluster.restart(service)
 
 else:
     print("Couldn't connect to the CDH cluster")
