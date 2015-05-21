@@ -3,7 +3,7 @@ from cm_api.endpoints import hosts
 from cm_api.endpoints import role_config_groups
 from subprocess import call
 from os import system
-import hashlib, re, time, argparse, os, time, sys, getpass
+import hashlib, re, time, argparse, os, io, time, sys, getpass
 import codecs
 import json
 from pprint import pprint
@@ -36,18 +36,17 @@ if cluster:
 
     #iterate through services, set cdh configs and possibly restart services
     for service in configJson["cdh"]:
-        print service
         #iterate through roles
         for role in configJson["cdh"][service]:
-            print role
             #iterate through config groups
             for configGroup in configJson["cdh"][service][role]:
-                print configGroup
                 cluster.set(service, role, configGroup, configJson["cdh"][service][role][configGroup])
         if args.restart == "yes":
             cluster.restart(service)
 
     #set atk configs
+    with io.open("application.json",'w', encoding='utf-8') as f:
+        f.write(unicode(json.dumps(configJson["atk"])))
 
 else:
     print("Couldn't connect to the CDH cluster")

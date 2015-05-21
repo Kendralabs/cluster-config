@@ -28,20 +28,21 @@ def pick(parentService, childService, parentServiceName, serviceList):
     service_index -= 1
     return list[service_index]
 
-
-"""
-print("Available service types on cluster: '{0}'".format(cluster.cluster.name))
-print("Pick a service")
-count = 0
-for service in cluster.services:
-    print("Id {0} service: {1}".format(count+1, service))
-    count += 1
-service_index = input("Enter service Id : ")
-if service_index <= 0 or service_index > len(cluster.services):
-    raise Exception("Not a valid service Id")
-
-service_index -= 1
-"""
+dump = raw_input("dump all configs: ").strip()
+if dump == "yes":
+    for service in cluster.services:
+        for role in  cluster.services[service].roles:
+            for configGroup in cluster.services[service].roles[role].configGroups:
+                for config in cluster.services[service].roles[role].configGroups[configGroup].configs:
+                    print("config name: {0} config description: {1}".format(config,
+                                                            cluster.services[service].
+                                                            roles[role].
+                                                            configGroups[configGroup].
+                                                            configs[config].
+                                                            config.description))
+                    print("\tconfig key: {0}.{1}.{2}.{3}".format(service,role,configGroup,config))
+                    print("")
+    sys.exit(0)
 
 service_index = pick("cluster", "service", cluster.clusterName, cluster.services)
 print service_index
@@ -50,8 +51,18 @@ pprint(cluster.services[service_index].roles)
 role_index = pick("service", "role", service_index, cluster.services[service_index].roles)
 print role_index
 
-configGroup_index = pick("role", "config group", role_index, cluster.services[service_index].roles[role_index].configGroups)
+configGroup_index = pick("role", "config group", role_index,
+                         cluster.services[service_index].roles[role_index].configGroups)
 print configGroup_index
 
-config_index = pick("config group", "config", configGroup_index, cluster.services[service_index].roles[role_index].configGroups[configGroup_index].configs)
-print config_index
+
+print ""
+for config in cluster.services[service_index].roles[role_index].configGroups[configGroup_index].configs:
+    print("config name: {0} config description: {1}".format(config,
+                                                            cluster.services[service_index].
+                                                            roles[role_index].
+                                                            configGroups[configGroup_index].
+                                                            configs[config].
+                                                            config.description))
+    print("\tconfig key: {0}.{1}.{2}.{3}".format(service_index,role_index,configGroup_index,config))
+    print("")

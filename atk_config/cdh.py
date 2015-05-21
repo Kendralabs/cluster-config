@@ -60,7 +60,6 @@ class Config(object):
     def __init__(self, group, config):
         self.group = group
         self.config = config
-        #print config.name
 
     def get(self):
         if self.config.value:
@@ -79,22 +78,19 @@ class ConfigGroup(object):
         self.group = group
         self.config = {}
         self.__get_configs()
-        #print "group ", group.name
 
     def __get_configs(self):
         self.configs = {}
         for name, config in self.group.get_config(view='full').items():
-            #print config
             setattr(self, name.lower().replace("-", "_"), Config(self.group, config))
             self.configs[name] = getattr(self, name.lower().replace("-", "_"))
-            #print config.name
-            #print config.roleType
+
 
     def __update(self):
         self.__get_configs()
 
     def set(self, configs):
-        print self.group.update_config(configs)
+        self.group.update_config(configs)
         self.__update()
 
     #group.update_config({"SPARK_WORKER_role_env_safety_valve": updated_class_path})
@@ -145,10 +141,6 @@ class Roles(object):
         else:
             self.hosts = Hosts(self.api, role.hostRef.hostId)
     def set(self, configGroup, configs):
-        print ""
-        print "roles.set"
-        print configGroup
-        print configs
         getattr(self, configGroup.lower().replace("-", "_")).set(configs)
 
     def type(self):
@@ -246,7 +238,6 @@ class Cluster(object):
 
     def __get_services(self):
         self.services = {}
-        #print self.cluster.get_all_services()
         for service in self.cluster.get_all_services():
             #self.services.append(service.type)
             setattr(self, service.type.lower(), Service(self.api, self.cluster, service))
@@ -280,14 +271,12 @@ class Cluster(object):
                 print("Id {0}: Cluster Name: {1:20} Version: {2}".format((count+1), c.name, c.version))
                 count += 1
             cluster_index = input("Enter the clusters Id : ") - 1
-            print type(self.clusters)
             if cluster_index <= 0 or cluster_index > (count-1):
                 raise Exception("Not a valid cluster Id")
             print ("You picked cluster {0}: Cluster Name: {1:20} Version: {2}".format(cluster_index, self.clusters[cluster_index].name, self.clusters[cluster_index].version))
             self.cluster = self.clusters[cluster_index]
 
     def deployConfig(self,service):
-        print "deploy config cluster"
         getattr(self,service.lower()).deployConfig()
 
     def restart(self, service):
