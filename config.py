@@ -34,7 +34,7 @@ if cluster:
     configJson = json.loads(configJson)
     pprint(configJson)
 
-    #iterate through services, set cdh congis and possibly restart services
+    #iterate through services, set cdh configs and possibly restart services
     for service in configJson["cdh"]:
         print service
         #iterate through roles
@@ -43,9 +43,11 @@ if cluster:
             #iterate through config groups
             for configGroup in configJson["cdh"][service][role]:
                 print configGroup
-                cluster.set(service, role, configGroup,configJson["cdh"][service][role][configGroup])
+                cluster.set(service, role, configGroup, configJson["cdh"][service][role][configGroup])
         if args.restart == "yes":
             cluster.restart(service)
+
+    #set atk configs
 
 else:
     print("Couldn't connect to the CDH cluster")

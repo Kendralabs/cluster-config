@@ -74,6 +74,7 @@ class Config(object):
 
 class ConfigGroup(object):
     group = None
+    configs = None
     def __init__(self, group):
         self.group = group
         self.config = {}
@@ -81,9 +82,11 @@ class ConfigGroup(object):
         #print "group ", group.name
 
     def __get_configs(self):
+        self.configs = {}
         for name, config in self.group.get_config(view='full').items():
             #print config
             setattr(self, name.lower().replace("-", "_"), Config(self.group, config))
+            self.configs[name] = getattr(self, name.lower().replace("-", "_"))
             #print config.name
             #print config.roleType
 
@@ -103,6 +106,7 @@ class Roles(object):
     roles = None
     hosts = None
     type = None
+    configGroups = None
     def __init__(self, api, service, cluster, role):
         self.api = api
         self.service = service
@@ -116,6 +120,7 @@ class Roles(object):
 
 
     def __get_all_config_groups(self):
+        self.configGroups = {}
         for group in role_config_groups.get_all_role_config_groups(self.api, self.service.name, self.cluster.name):
             if group.roleType == self.type:
                 #setattr(self, group.name.lower().replace("-", "_").replace(self.apiService.name.lower()+"_", ""), ConfigGroup(group))
@@ -128,6 +133,7 @@ class Roles(object):
                 print group.serviceRef
                 """
                 setattr(self, group.name.lower().replace("-", "_"), ConfigGroup(group))
+                self.configGroups[group.name] = getattr(self, group.name.lower().replace("-", "_"))
 
     def add(self, role):
         self.roles[role.name] = role
@@ -153,6 +159,9 @@ class Service(object):
     apiService = None
     cluster = None
     groups = None
+    roles = None
+    roleTypes = None
+    roleNames = None
     def __init__(self, api, cluster, service):
         self.groups = {}
         self.api = api
@@ -162,16 +171,19 @@ class Service(object):
         #self.__get_all_config_groups()
 
     def __get_roles(self):
-        self.roles = []
+        self.roles = {}
+        self.roleNames = []
+        self.roleTypes = []
         for role in self.apiService.get_all_roles():
-            self.roles.append(role.name)
+            self.roleNames.append(role.name)
+            self.roleTypes.append(role.type)
             if hasattr(self, role.type.lower()):
                 getattr(self, role.type.lower(), Roles(self.api, self.apiService, self.cluster, role)).add(role)
             else:
                 setattr(self, role.type.lower(), Roles(self.api, self.apiService, self.cluster, role))
+                self.roles[role.type] = getattr(self, role.type.lower())
+        self.roleTypes = set(self.roleTypes)
 
-    def set(self,role,configGroup,configs):
-        getattr(self, role.lower()).set(configGroup, configs)
 
     def restart(self):
         self.apiService.restart()
@@ -179,8 +191,7 @@ class Service(object):
         self.deployConfig()
 
     def deployConfig(self):
-        print self.roles
-        self.apiService.deploy_client_config(*self.roles)
+        self.apiService.deploy_client_config(*self.roleNames)
         self.poll_commands("deployClientConfig")
 
     def poll_commands(self, command_name):
@@ -203,6 +214,13 @@ class Service(object):
             else:
                 break
         print "\n"
+
+    def set(self,role,configGroup,configs):
+        getattr(self, role.lower()).set(configGroup, configs)
+
+    def get(self,role,configGroup=None,configs=None):
+
+        getattr(self, role.lower()).get(configGroup, configs)
 
     def type(self):
         return self.apiService.type
@@ -230,8 +248,10 @@ class Cluster(object):
         self.services = {}
         #print self.cluster.get_all_services()
         for service in self.cluster.get_all_services():
-            print service.type
+            #self.services.append(service.type)
             setattr(self, service.type.lower(), Service(self.api, self.cluster, service))
+            self.services[service.type] = getattr(self, service.type.lower())
+
 
 
     def __get_cluster(self):
@@ -261,7 +281,7 @@ class Cluster(object):
                 count += 1
             cluster_index = input("Enter the clusters Id : ") - 1
             print type(self.clusters)
-            if cluster_index < 0 or cluster_index > (count-1):
+            if cluster_index <= 0 or cluster_index > (count-1):
                 raise Exception("Not a valid cluster Id")
             print ("You picked cluster {0}: Cluster Name: {1:20} Version: {2}".format(cluster_index, self.clusters[cluster_index].name, self.clusters[cluster_index].version))
             self.cluster = self.clusters[cluster_index]
@@ -276,6 +296,8 @@ class Cluster(object):
     def set(self,service,role,configGroup,configs):
         getattr(self,service.lower()).set(role, configGroup, configs)
 
-
-    def get(self,type,group,config):
-        print("get cdh")
+    def get(self, service, role=None, configGroup=None, config=None):
+        if role is None:
+            return getattr(self,service.lower())
+        else:
+            return getattr(self,service.lower()).get(role, configGroup, config)
