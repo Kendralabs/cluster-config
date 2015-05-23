@@ -20,8 +20,12 @@
         "intel": {
             "analytics": {
                 "api": {
-                    "host": "0.0.0.0",
+                    "host": "127.0.0.1",
                     "port": 9099
+                },
+                "spark":{
+                    "home" : "/opt/cloudera/parcels/CDH/lib/spark"
+
                 }
             }
         }
