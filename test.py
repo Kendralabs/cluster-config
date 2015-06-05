@@ -30,3 +30,4 @@ print test
 one = [1]
 print test + one
 
+#copy user into auto config

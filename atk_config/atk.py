@@ -1,27 +1,79 @@
-
 from pprint import pprint
+import os, io, json, sys
 
-def find_conflicts_re(user_dict, auto_generated, config_key=[]):
-    print ""
-    print "re"
-    pprint(config_key)
-    pprint(user_dict)
-    print config_key
-    if config_key is None:
-        config_key = []
+CONFIG_FILE_NAME = "application.json"
+CONFIG_DIR = "conf"
+CONFIG_TYPE = ["user", "generated", "core"]
+
+
+def check_dir_exists(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
+def write_json_conf(json_dict, path):
+    try:
+        configJsonOpen = io.open(path, encoding="utf-8", mode="w")
+        configJsonOpen.write(unicode(json.dumps(json_dict, indent=True, sort_keys=True)))
+        configJsonOpen.close()
+    except IOError as e:
+        print("couldn't write {0}".format(path))
+        sys.exit(1)
+
+def open_json_conf(path):
+    conf = None
+    try:
+        configJsonOpen = io.open(path, encoding="utf-8", mode="r")
+        conf = json.loads(configJsonOpen.read())
+        configJsonOpen.close()
+    except IOError as e:
+        print("Couldn't open json file: {0}".format(path))
+    return conf
+
+def set_conf(json_dict, type):
+    check_dir_exists("conf")
+    check_dir_exists("conf/{0}".format(type))
+    return write_json_conf(json_dict, "conf/{0}/{1}".format(type, CONFIG_FILE_NAME))
+
+def get_conf(type):
+    check_dir_exists("conf")
+    check_dir_exists("conf/{0}".format(type))
+    return open_json_conf("conf/{0}/{1}".format(type, CONFIG_FILE_NAME))
+
+def get_user_conf():
+    return get_conf("user")
+
+def set_user_conf(json_dict):
+    return set_conf(json_dict, "user")
+
+def set_generated_conf(json_dict):
+    return set_conf(json_dict, "generated")
+
+def save_config(user_configs, auto_generated):
+    #copy auto_generated configs
+    tempConfigs = auto_generated.copy()
+    #update with user configs overriding conflicts
+    tempConfigs.update(user_configs)
+
+    #cond key conflicts
+    conflicts = find_conflicts(user_configs, auto_generated)
+    pprint(conflicts)
+    #ask user to resolve conflicts
+    resolved = resolve_conflicts(conflicts, user_configs, auto_generated)
+    #update resolved keys
+    pprint(resolved)
+    update_configs(resolved, user_configs, auto_generated)
+
+
+def find_conflicts(user_dict, auto_generated, config_key=[]):
     conflict_keys = []
     for key in user_dict:
-        print key
-        print user_dict[key]
         if type(user_dict[key]) == dict and auto_generated[key]:
-            print "recurse"
-            #find_conflicts_re(user_dict[key], auto_generated[key], [key] if config_key is None or len(config_key) == 0 else config_key.append(key))
             config_key.append(key)
-            print config_key
-            for conflict_key in find_conflicts_re(user_dict[key], auto_generated[key], config_key):
-                conflict_keys.append(config_key)
-        elif auto_generated[key] is None:
-            print "continue"
+            for add_key in find_conflicts(user_dict[key], auto_generated[key], config_key):
+                conflict_keys.append(add_key)
+            config_key.pop()
+        elif hasattr(auto_generated,key) is False or auto_generated[key] is None:
             continue
         else:
             temp = [key]
@@ -29,39 +81,85 @@ def find_conflicts_re(user_dict, auto_generated, config_key=[]):
     return conflict_keys
 
 
+def get_value(config_keys, configs):
+    for key in config_keys:
+        if configs[key] and type(configs[key]) == dict:
+            return get_value(config_keys[1:], configs[key])
+        elif configs[key]:
+            return configs[key]
 
+def merge_dicts(dict_one, dict_two):
+    temp = {}
+    print ""
+    print "merge dicts"
+    pprint(dict_one)
+    pprint(dict_two)
+    print "--"
+    temp = dict_one.copy()
+    pprint(temp)
+    for key in dict_two:
+        print "dict one: {0}".format(hasattr(dict_one,key))
+        if key in dict_one and type(dict_two[key]) == dict:
+            print "recurse: {0}".format(key)
+            temp[key] = merge_dicts(dict_one[key], dict_two[key])
+        elif key not in dict_one:
+            print "no matching key: {0}".format(key)
+            temp[key] = dict_two[key]
+            print "continue"
+        pprint(temp)
+    return temp
 
+def set_value(value, config_keys, configs):
+    for key in config_keys:
+        if configs[key] and type(configs[key]) == dict:
+            return set_value(value, config_keys[1:], configs[key])
+        elif configs[key]:
+            configs[key] = value
 
-def find_conflicts(user_config, auto_generated):
-    for intel in user_config:
-            print intel
-            print user_config[intel]
-            for analytics in user_config[intel]:
-                print analytics
-                print user_config[intel][analytics]
-                for group in user_config[intel][analytics]:
-                    print group
-                    print user_config[intel][analytics][group]
-                    for key in user_config[intel][analytics][group]:
-                        print key
-                        print user_config[intel][analytics][group][key]
-                        if auto_generated[intel][analytics][group][key] and \
-                                        auto_generated[intel][analytics][group][key] != \
-                                        user_config[intel][analytics][group][key]:
-                            user_config[intel][analytics][group][key] = \
-                                resolve_conflict([intel,analytics,group,key],
-                                user_config[intel][analytics][group][key],
-                                auto_generated[intel][analytics][group][key])
+def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
+    print("\nKey merge conflict: {0}".format('.'.join(conflict)))
+    user_value = get_value(conflict, user_configs)
 
-
-    print"fc"
-
-def resolve_conflict(key, user_value, auto_value ):
-    print("Key merge conflict: {0}".format('.'.join(key)))
-    print("(user)User value: {0}".format(user_value))
-    print("(auto)Auto gen value: {0}".format(auto_value))
-    keep = raw_input("Would you like to keep user value or the auto gen value?[user/auto]: ").strip()
-    if keep == "user":
-        return user_value
+    print("[u|user]User value: {0}".format(user_value))
+    auto_value = get_value(conflict, auto_configs)
+    print("[a|auto]Auto gen value: {0}".format(auto_value))
+    print("Optionally you can accept [au|alluser]all user values or [aa|allauto]all auto generated values.")
+    if keep is None:
+        keep = raw_input("Would you like to keep user value or the auto gen value?[[user|au][all|aa]]: ").strip()
+    if keep == "user" or keep == "au":
+        return (keep, user_value)
     else:
-        return auto_value
+        return (keep, auto_value)
+
+
+def resolve_conflicts(conflicts, user_configs, auto_configs):
+    resolved = []
+    keep = None
+    for conflict in conflicts:
+        keep, value = resolve_conflict(conflict, user_configs, auto_configs, keep)
+        resolved.append((conflict, value))
+
+    return resolved
+
+
+
+
+
+
+def update_configs(resolved_configs, user_configs, auto_generated):
+    temp = merge_dicts(auto_generated, user_configs)
+    print "DONE"
+    pprint(temp)
+    temp = merge_dicts(user_configs, auto_generated)
+    print "DONE"
+    pprint(temp)
+
+    #for resolved in resolved_configs:
+    #    pprint(resolved)
+    #    pprint(resolved[0])
+    #    pprint(resolved[1])
+    #    configs = set_value(resolved[1], resolved[0], configs)
+    #    pprint(configs)
+
+
+
