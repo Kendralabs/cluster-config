@@ -61,31 +61,6 @@ if cluster:
         atk.set_generated_conf(configJson["atk"])
     else:
         atk.set_generated_conf(configJson["atk"])
-    sys.exit(1)
-    #currentAtkConfigs = None
-    #try:
-    #   configJsonOpen = io.open("application.json", encoding="utf-8", mode="r")
-    #    currentAtkConfigs = json.loads(configJsonOpen.read())
-    #    configJsonOpen.close()
-    #except IOError as e:
-    #    print("No current application.json found")
-
-    if currentAtkConfigs:
-        #atk.find_conflicts(currentAtkConfigs,configJson["atk"])
-        atk.save_config(currentAtkConfigs, configJson["atk"])
-
-
-    else:
-        try:
-            configJsonOpen = io.open("application.json", encoding="utf-8", mode="w")
-            configJsonOpen.write(unicode(json.dumps(configJson["atk"], indent=True, sort_keys=True)))
-            configJsonOpen.close()
-        except IOError as e:
-            print("couldn't write application.json")
-            sys.exit(1)
-
-    #with io.open("application.json",'w', encoding='utf-8') as f:
-    #f.write(unicode(json.dumps(configJson["atk"], indent=True, sort_keys=True)))
 
 else:
     print("Couldn't connect to the CDH cluster")
