@@ -1,3 +1,4 @@
+import base
 from cm_api.api_client import ApiResource
 from cm_api.endpoints import hosts
 from cm_api.endpoints import role_config_groups
@@ -290,3 +291,4 @@ class Cluster(object):
             return getattr(self,service.lower())
         else:
             return getattr(self,service.lower()).get(role, configGroup, config)
+

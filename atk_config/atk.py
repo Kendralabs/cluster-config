@@ -1,9 +1,10 @@
+import base
 from pprint import pprint
-import os, io, json, sys
+import os, io, json, sys, shutil
+from pyhocon import ConfigFactory
 
-CONFIG_FILE_NAME = "application.json"
-CONFIG_DIR = "conf"
-CONFIG_TYPE = ["user", "generated", "core"]
+
+
 
 
 def check_dir_exists(path):
@@ -20,34 +21,51 @@ def write_json_conf(json_dict, path):
         print("couldn't write {0}".format(path))
         sys.exit(1)
 
-def open_json_conf(path):
-    conf = None
+
+#def open_json_conf(path):
+#    conf = None
+#    try:
+#        configJsonOpen = io.open(path, encoding="utf-8", mode="r")
+#        conf = json.loads(configJsonOpen.read())
+#        configJsonOpen.close()
+#    except IOError as e:
+#        print("Couldn't open json file: {0}".format(path))
+#    return conf
+
+
+def copy_generated_conf():
+    shutil.copyfile("conf/{0}.{1}".format(base.CONFIG_GEN, base.CONFIG_EXT),"conf/{0}.{1}".format(base.CONFIG_USER, base.CONFIG_EXT))
+
+
+def open_hocon(path):
     try:
-        configJsonOpen = io.open(path, encoding="utf-8", mode="r")
-        conf = json.loads(configJsonOpen.read())
-        configJsonOpen.close()
+        return ConfigFactory.parse_file(path)
     except IOError as e:
-        print("Couldn't open json file: {0}".format(path))
-    return conf
+        print("no {0}.{1}".format(base.CONFIG_USER, base.CONFIG_EXT))
+        return None
+
 
 def set_conf(json_dict, type):
     check_dir_exists("conf")
-    check_dir_exists("conf/{0}".format(type))
-    return write_json_conf(json_dict, "conf/{0}/{1}".format(type, CONFIG_FILE_NAME))
+    return write_json_conf(json_dict, "conf/{0}.{1}".format(type, base.CONFIG_EXT))
+
 
 def get_conf(type):
     check_dir_exists("conf")
-    check_dir_exists("conf/{0}".format(type))
-    return open_json_conf("conf/{0}/{1}".format(type, CONFIG_FILE_NAME))
+    return open_hocon("conf/{0}.{1}".format(type, base.CONFIG_EXT))
+
 
 def get_user_conf():
     return get_conf("user")
 
+
 def set_user_conf(json_dict):
     return set_conf(json_dict, "user")
 
+
 def set_generated_conf(json_dict):
     return set_conf(json_dict, "generated")
+
 
 def save_config(user_configs, auto_generated):
     #copy auto_generated configs

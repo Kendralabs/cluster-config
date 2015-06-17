@@ -1,0 +1,17 @@
+{"HDFS": {
+    "DATANODE": {
+        "hdfs-DATANODE-BASE": {
+            "dfs_datanode_failed_volumes_tolerated": "5",
+            "dfs_datanode_du_reserved": "11811160064"
+        }
+    }
+},
+    "HBASE": {
+        "REGIONSERVER": {
+        "hbase-REGIONSERVER-BASE": {
+            "hbase_regionserver_java_heapsize": "6442450944"
+        }
+        }
+    }
+}
+    

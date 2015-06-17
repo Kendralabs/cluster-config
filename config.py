@@ -7,11 +7,7 @@ import hashlib, re, time, argparse, os, io, time, sys, getpass
 import codecs
 import json
 from pprint import pprint
-from atk_config import cdh, atk
-
-CONFIG_FILE_NAME = "application.json"
-CONFIG_DIR = "conf"
-CONFIG_SECTIONS = ["user", "generated", "core"]
+from atk_config import cdh, atk, base, generated
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
 parser.add_argument("--host", type=str, help="Cloudera Manager Host", default="127.0.0.1")
@@ -31,19 +27,16 @@ cluster = cdh.Cluster(args.host, args.port, args.username, args.password, args.c
 
 if cluster:
     #Read the generated configs
-    configJson = None
-    try:
-        configJsonOpen = io.open("config.json", encoding="utf-8", mode="r")
-        configJson = json.loads(configJsonOpen.read())
-        configJsonOpen.close()
-    except IOError as e:
-        print("Couldn't find config.json file")
-        sys.exit(1)
+    generatedCdhConfig = generated.get_generated_config()
+    userConfig = generated.get_user_config()
 
-    pprint(configJson)
-
+    pprint(generatedCdhConfig)
+    pprint(userConfig)
+    sys.exit(1)
     #if update cdh is "yes" then we iterate and update all the specified keys
     if args.update_cdh == "yes":
+
+        sys.exit(1)
         #iterate through services, set cdh configs and possibly restart services
         for service in configJson["cdh"]:
             #iterate through roles
@@ -56,11 +49,8 @@ if cluster:
 
     user_conf = atk.get_user_conf()
     if user_conf is None:
-        #copy generated to user
-        atk.set_user_conf(configJson["atk"])
-        atk.set_generated_conf(configJson["atk"])
-    else:
-        atk.set_generated_conf(configJson["atk"])
+        #copy generated.conf to user.conf
+        atk.copy_generated_conf()
 
 else:
     print("Couldn't connect to the CDH cluster")
