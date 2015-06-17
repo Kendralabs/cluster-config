@@ -179,6 +179,7 @@ class Service(object):
 
 
     def restart(self):
+        print("Restarting service : \"{0}\"".format(self.apiService.type))
         self.apiService.restart()
         self.poll_commands("Restart")
         self.deployConfig()
@@ -283,7 +284,7 @@ class Cluster(object):
     def restart(self, service):
         getattr(self,service.lower()).restart()
 
-    def set(self,service,role,configGroup,configs):
+    def set(self, service, role, configGroup, configs):
         getattr(self,service.lower()).set(role, configGroup, configs)
 
     def get(self, service, role=None, configGroup=None, config=None):
@@ -292,3 +293,25 @@ class Cluster(object):
         else:
             return getattr(self,service.lower()).get(role, configGroup, config)
 
+    ###
+
+    ###
+    def update_configs(self, configs, restart=False):
+        for service in configs:
+            #iterate through roles
+            if service in self.services:
+                for role in configs[service]:
+                    #iterate through config groups
+                    if role in self.services[service].roles:
+                        for configGroup in configs[service][role]:
+                            if configGroup in self.services[service].roles[role].configGroups:
+                                self.services[service].roles[role].configGroups[configGroup].set(configs[service][role][configGroup])
+                                #self.set(service, role, configGroup, configs[service][role][configGroup])
+                            else:
+                                print("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(configGroup, role))
+                    else:
+                        print("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, service))
+                if restart:
+                    self.restart(service)
+            else:
+                print("Service: \"{0}\" doesn't exist in cluster: \"{1}\"".format(service, self.clusterName))

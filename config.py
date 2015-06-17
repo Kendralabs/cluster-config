@@ -28,33 +28,18 @@ cluster = cdh.Cluster(args.host, args.port, args.username, args.password, args.c
 if cluster:
     #Read the generated configs
 
-    generatedCdhConfig = generated.get_generated_config()
-    userConfig = generated.get_user_config()
-
-
-    pprint(generatedCdhConfig)
-    pprint(userConfig)
-
-    if userConfig:
+    configs = generated.get_generated_config()
+    user_config = generated.get_user_config()
+    if user_config:
         #merge config dictionaries and resolve conflicts
-        merged = base.merge_dicts(userConfig, generatedCdhConfig)
-
+        configs = base.merge_dicts(user_config, configs)
         print ""
-        pprint(merged)
-    sys.exit(1)
+    pprint(configs)
+
     #if update cdh is "yes" then we iterate and update all the specified keys
     if args.update_cdh == "yes":
-
-        sys.exit(1)
         #iterate through services, set cdh configs and possibly restart services
-        for service in configJson["cdh"]:
-            #iterate through roles
-            for role in configJson["cdh"][service]:
-                #iterate through config groups
-                for configGroup in configJson["cdh"][service][role]:
-                    cluster.set(service, role, configGroup, configJson["cdh"][service][role][configGroup])
-            if args.restart == "yes":
-                cluster.restart(service)
+        cluster.update_configs(configs, args.restart)
 
     user_conf = atk.get_user_conf()
     if user_conf is None:

@@ -13,6 +13,12 @@ CONFIG_GEN = "generated"
 CDH_CONFIG_NAME = "cdh"
 CDH_USER_CONFIG_NAME = "user-cdh"
 
+SINGLE = ["user", "auto"]
+PERSISTANT = ["au", "ag"]
+RETRY = 5
+
+CONFLICT_RESOLUTION = ["interactive", "first", "second"]
+
 def open_json_conf(path):
     conf = None
     print path
@@ -25,22 +31,17 @@ def open_json_conf(path):
     return conf
 
 
-def merge_dicts(first, second):
+def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_preference="first"):
 
-    conflicts = find_dict_conflicts(first, second)
-    print "conflicts"
-    pprint(conflicts)
-    resolved = resolve_conflicts(conflicts, first, second)
-    pprint(resolved)
-    temp = _merge_dicts(first, second)
-    print "DONE first second"
-    pprint(temp)
-    temp = _merge_dicts(second, first)
-    print "DONE second first"
-    pprint(temp)
+    conflicts = find_dict_conflicts(first_dictionary, second_dictionary)
+
+    resolved = resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference)
+
+    temp = _merge_dicts(first_dictionary, second_dictionary)
+
     set_resolved(resolved, temp)
-    pprint(temp)
 
+    return temp
 
 def _recurse_type_check(dictionary, key):
     return type(dictionary[key]) is dict or type(dictionary[key]) is list
@@ -66,17 +67,16 @@ def _merge_dicts(dict_one, dict_two):
         #pprint(temp)
     return temp
 
-def find_dict_conflicts(user_dict, auto_generated, config_key=[]):
+def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
     conflict_keys = []
-    for key in user_dict:
+    for key in first_dictionary:
         #if the value of the key type is dict and the key exists in auto_generated recurse
-        print "key: ", key, type(user_dict[key])
-        if _recurse_type_check(user_dict, key) and key in auto_generated:
+        if _recurse_type_check(first_dictionary, key) and key in second_dictionary:
             config_key.append(key)
-            for add_key in find_dict_conflicts(user_dict[key], auto_generated[key], config_key):
+            for add_key in find_dict_conflicts(first_dictionary[key], second_dictionary[key], config_key):
                 conflict_keys.append(add_key)
             config_key.pop()
-        elif auto_generated.has_key(key) is None or auto_generated.get(key) is None:
+        elif key not in second_dictionary or second_dictionary.get(key) is None or second_dictionary.get(key) == first_dictionary.get(key):
             continue
         else:
             temp = [key]
@@ -88,22 +88,36 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
     print("\nKey merge conflict: {0}".format('.'.join(conflict)))
     user_value = get_value(conflict, user_configs)
 
-    print("[u|user]User value: {0}".format(user_value))
+    print("[{0}]User value: {1}".format(SINGLE[0], user_value))
     auto_value = get_value(conflict, auto_configs)
-    print("[a|auto]Auto gen value: {0}".format(auto_value))
-    print("Optionally you can accept [au] all user values or [ag] all auto generated values.")
-    if keep is None:
-        keep = raw_input("Would you like to keep the user value or the auto generated value?[[user|au][auto|ag]]: ").strip()
-    if keep == "user" or keep == "au":
-        return (keep, user_value)
-    else:
-        return (keep, auto_value)
+    print("[{0}]Auto gen value: {1}".format(SINGLE[1], auto_value))
+    print("Optionally you can accept [{0}] all user values or [{1}] all auto generated values.".format(PERSISTANT[0], PERSISTANT[1]))
+    while keep is None:
+        if RETRY <= 0:
+            print("Too many retries no valid entry.")
+            sys.exit(1)
 
-def resolve_conflicts(conflicts, user_configs, auto_configs):
+        keep = raw_input("Would you like to keep the user value or the auto generated value?[[{0}|{1}][{2}|{3}]]: ".format(SINGLE[0], PERSISTANT[0], SINGLE[1], PERSISTANT[1])).strip()
+        if keep not in SINGLE and keep not in PERSISTANT:
+            print("Not a valid answer please try again.")
+            keep = None
+            RETRY -= 1
+
+    if keep in SINGLE:
+        return None, user_value if keep == SINGLE[0] else auto_value
+    else:
+        return keep, user_value if keep == PERSISTANT[0] else auto_value
+
+def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference):
     resolved = []
-    keep = None
+    if conflict_resolution_preference is "first":
+        keep = PERSISTANT[0]
+    elif conflict_resolution_preference is "second":
+        keep = PERSISTANT[1]
+    else:
+        keep = None
     for conflict in conflicts:
-        keep, value = resolve_conflict(conflict, user_configs, auto_configs, keep)
+        keep, value = resolve_conflict(conflict, first_dictionary, second_dictionary, keep)
         resolved.append((conflict, value))
 
     return resolved
@@ -126,5 +140,4 @@ def get_value(config_keys, configs):
 
 def set_resolved(resolved, dictionary):
     for key, value in resolved:
-        print "key: ", key, "value: " ,value
         set_value(value, key, dictionary)
