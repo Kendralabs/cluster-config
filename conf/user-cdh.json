@@ -1,9 +1,12 @@
 {"HDFS": {
     "DATANODE": {
         "hdfs-DATANODE-BASE": {
-            "dfs_datanode_failed_volumes_tolerated": "5",
-            "dfs_datanode_du_reserved": "11811160064"
+            "dfs_datanode_failed_volumes_tolerated": "1",
+            "dfs_datanode_du_reserved": "11111111"
         }
+    },
+    "newkey":{
+        "somevalue": "myvalue"
     }
 },
     "HBASE": {

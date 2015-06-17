@@ -27,11 +27,20 @@ cluster = cdh.Cluster(args.host, args.port, args.username, args.password, args.c
 
 if cluster:
     #Read the generated configs
+
     generatedCdhConfig = generated.get_generated_config()
     userConfig = generated.get_user_config()
 
+
     pprint(generatedCdhConfig)
     pprint(userConfig)
+
+    if userConfig:
+        #merge config dictionaries and resolve conflicts
+        merged = base.merge_dicts(userConfig, generatedCdhConfig)
+
+        print ""
+        pprint(merged)
     sys.exit(1)
     #if update cdh is "yes" then we iterate and update all the specified keys
     if args.update_cdh == "yes":
