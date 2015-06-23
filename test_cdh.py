@@ -25,9 +25,9 @@ print ""
 pprint(vars(cluster.hdfs.datanode.hdfs_datanode_base.dfs_datanode_port))
 
 # cluster.services["HDFS"].roles["DATANODE"].configGroups["hdfs_datanode_base"].configs["dfs_datanode_failed_volumes_tolerated"].get
-print cluster.hdfs.datanode.hdfs_datanode_base.dfs_datanode_failed_volumes_tolerated.get()
-print cluster.hdfs.datanode.hdfs_datanode_base.set({"dfs_datanode_failed_volumes_tolerated": 5})
-print cluster.hdfs.datanode.hdfs_datanode_base.dfs_datanode_failed_volumes_tolerated.get()
+print cluster.hdfs.datanode.datanode_base.dfs_datanode_failed_volumes_tolerated.get()
+print cluster.hdfs.datanode.datanode_base.set({"dfs_datanode_failed_volumes_tolerated": 5})
+print cluster.hdfs.datanode.datanode_base.dfs_datanode_failed_volumes_tolerated.get()
 #print cluster.hdfs.datanode.hdfs_datanode_base.dfs_datanode_failed_volumes_tolerated.set(6)
 #print cluster.hdfs.datanode.hdfs_datanode_base.dfs_datanode_failed_volumes_tolerated.get()
 

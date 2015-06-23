@@ -1,0 +1,4 @@
+
+
+def write( dictionary, path):
+

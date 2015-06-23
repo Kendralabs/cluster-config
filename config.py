@@ -7,15 +7,17 @@ import hashlib, re, time, argparse, os, io, time, sys, getpass
 import codecs
 import json
 from pprint import pprint
-from atk_config import cdh, atk, base, generated
+from atk_config import cdh, atk, base, generated, cli
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
-parser.add_argument("--host", type=str, help="Cloudera Manager Host", default="127.0.0.1")
-parser.add_argument("--port", type=int, help="Cloudera Manager Port", default=7180)
-parser.add_argument("--username", type=str, help="Cloudera Manager User Name", default="admin")
-parser.add_argument("--password", type=str, help="Cloudera Manager Password", default="admin")
-parser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is managed by "
-                                                "Cloudera Manager.", default="cluster")
+cli.add_cdh_command_line_options(parser)
+#parser.add_argument("--host", type=str, help="Cloudera Manager Host", default="127.0.0.1")
+#parser.add_argument("--port", type=int, help="Cloudera Manager Port", default=7180)
+#parser.add_argument("--username", type=str, help="Cloudera Manager User Name", default="admin")
+#parser.add_argument("--password", type=str, help="Cloudera Manager Password", default="admin")
+#parser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is managed by "
+#                                                "Cloudera Manager.", default="cluster")
+
 parser.add_argument("--update-cdh", type=str, help="Should we set all the CDH configs keys in config.json?", default="no")
 parser.add_argument("--restart", type=str, help="Weather or not to restart CDH services after config changes", default="no")
 

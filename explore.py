@@ -1,14 +1,10 @@
-from atk_config import cdh
+from atk_config import cdh,cli
 import hashlib, re, time, argparse, os, time, sys, getpass
 from pprint import pprint
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
-parser.add_argument("--host", type=str, help="Cloudera Manager Host", default="127.0.0.1")
-parser.add_argument("--port", type=int, help="Cloudera Manager Port", default=7180)
-parser.add_argument("--username", type=str, help="Cloudera Manager User Name", default="admin")
-parser.add_argument("--password", type=str, help="Cloudera Manager Password", default="admin")
-parser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is managed by "
-                                                "Cloudera Manager.", default="cluster")
+cli.add_cdh_command_line_options(parser)
+
 args = parser.parse_args()
 
 cluster = cdh.Cluster(args.host, args.port, args.username, args.password, args.cluster)
@@ -28,23 +24,27 @@ def pick(parentService, childService, parentServiceName, serviceList):
     service_index -= 1
     return list[service_index]
 
-dump = raw_input("dump all configs: ").strip()
+dump = raw_input("dump all configs[yes]: ").strip()
 if dump == "yes":
     for service in cluster.services:
         for role in  cluster.services[service].roles:
             for configGroup in cluster.services[service].roles[role].configGroups:
                 for config in cluster.services[service].roles[role].configGroups[configGroup].configs:
+
                     print("config name: {0} config description: {1}".format(config,
                                                             cluster.services[service].
                                                             roles[role].
                                                             configGroups[configGroup].
                                                             configs[config].
-                                                            config.description))
-                    print("\tconfig key: {0}.{1}.{2}.{3}".format(service,role,configGroup,config))
+                                                            cdh_config.description))
+                    print("\tconfig key: {0}.{1}.{2}.{3}".format(service,role,configGroup,cluster.services[service].
+                                                            roles[role].
+                                                            configGroups[configGroup].
+                                                            configs[config].name))
                     print("")
     sys.exit(0)
 
-service_index = pick("cluster", "service", cluster.clusterName, cluster.services)
+service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.services)
 print service_index
 
 pprint(cluster.services[service_index].roles)
@@ -63,6 +63,9 @@ for config in cluster.services[service_index].roles[role_index].configGroups[con
                                                             roles[role_index].
                                                             configGroups[configGroup_index].
                                                             configs[config].
-                                                            config.description))
-    print("\tconfig key: {0}.{1}.{2}.{3}".format(service_index,role_index,configGroup_index,config))
+                                                            cdh_config.description))
+    print("\tconfig key: {0}.{1}.{2}.{3}".format(service_index,role_index,configGroup_index,cluster.services[service_index].
+                                                            roles[role_index].
+                                                            configGroups[configGroup_index].
+                                                            configs[config].name))
     print("")

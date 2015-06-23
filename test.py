@@ -1,35 +1,21 @@
 from pprint import pprint
 
-user = {"one": "one", "two": 2, "three": "3", "five": 5}
-auto = {"one": "1", "two": {}, "three": "3", "four":"4"}
+role = { "type": "test"}
+print role["type"]
+pprint(role)
+role["bleh"] = "sdsdf"
+#setattr(role, "type1", "")
+role["type"] = ""
 
-c = auto.copy()
-pprint(c)
+print role.type
 
-c.update(user)
+somefunction="(memory/cores)"
 
-pprint(c)
+somefunction = somefunction.replace("memory", "6000000")
+somefunction = somefunction.replace("cores", "4")
+pprint(somefunction)
 
-print len(c)
-print len(auto["two"])
-
-print type(c)
-print type(auto["two"])
-print type(user["one"])
-
-if type(auto["two"]) == dict:
-    print "hello dict"
-
-
-test = []
-
-test.append(2)
-
-print test
-
-one = [1]
-print test + one
-
+print eval(somefunction)
 
 
 #copy user into auto config

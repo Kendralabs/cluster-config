@@ -141,3 +141,4 @@ def get_value(config_keys, configs):
 def set_resolved(resolved, dictionary):
     for key, value in resolved:
         set_value(value, key, dictionary)
+
