@@ -110,12 +110,22 @@ class Config(object):
     def cdh_config(self, cdh_config):
         self._cdh_config = cdh_config
 
-class ConfigGroup(object):
+    @property
+    def value(self):
+        if self.cdh_config.value:
+            return self.cdh_config.value
+        else:
+            return self.cdh_config.default
 
+    @value.setter
+    def value(self, value):
+        self.cdh_config.value = self.cdh_group.update_config({self.cdg_config.name: value})[self.cdh_config.name]
+
+class Config_Group(object):
     def __init__(self, cdh_service, cdh_group):
         #cdh service object
         self._cdh_service = None
-        #cdh configgroup object
+        #cdh config_group object
         self._cdh_group = None
         #cdh configs items
         self._cdh_configs = {}
@@ -126,7 +136,6 @@ class ConfigGroup(object):
         self.__get_configs()
 
     def __get_configs(self):
-        #self.configs = {}
         for name, config in self.cdh_group.get_config(view='full').items():
             temp = Config(self.cdh_group, config)
             setattr(self, temp.name, temp)
@@ -139,6 +148,10 @@ class ConfigGroup(object):
     def set(self, configs):
         self.cdh_group.update_config(configs)
         self.__update()
+
+    @property
+    def key(self):
+        return self.name.upper()
 
     @property
     def name(self):
@@ -175,10 +188,7 @@ class ConfigGroup(object):
 
 
 class Roles(object):
-    #roles = None
-    hosts = None
-    type = None
-    configGroups = None
+
     def __init__(self, cdh_resource_root, cdh_cluster, cdh_service, cdh_role, cdh_role_type=None, cdh_role_name=None, active=True):
         #save are cloudera manager resource root reference
         self.cdh_resource_root = cdh_resource_root
@@ -188,6 +198,12 @@ class Roles(object):
         self.cdh_service = cdh_service
         #cdh role object
         self._cdh_roles = {}
+        #config groups for the role
+        self._config_groups = {}
+        #list of hosts the role is installed on
+        self._hosts = None
+
+
         #store the type of the roles
         self._type = None
 
@@ -209,27 +225,12 @@ class Roles(object):
         self.__get_all_config_groups()
 
     def __get_all_config_groups(self):
-        self.configGroups = {}
-        #print "service name", self.cdh_service.name
-        #print "cluster name", self.cdh_cluster.name
         for group in role_config_groups.get_all_role_config_groups(self.cdh_resource_root, self.cdh_service.name, self.cdh_cluster.name):
-
             if group.roleType == self.type:
-
-                #setattr(self, group.name.lower().replace("-", "_").replace(self.apiService.name.lower()+"_", ""), ConfigGroup(group))
-                #if self.active is False:
-                #    print group.name
-                #    print "group role type:" , group.roleType
-                #    print group.base
-                #    print group.config
-                #    print group.displayName
-                #    print "ServiceRef:" , group.serviceRef
-
-
-
-                config_group = ConfigGroup(self.cdh_service, group)
+                config_group = Config_Group(self.cdh_service, group)
                 setattr(self, config_group.name, config_group)
-                self.configGroups[config_group.name] = config_group
+                self.config_groups[config_group.name] = config_group
+                self.config_groups[config_group.key] = config_group
 
 
     def add(self, cdh_role):
@@ -243,8 +244,12 @@ class Roles(object):
         else:
             self.hosts = Hosts(self.cdh_resource_root, role.hostRef.hostId)
 
-    def set(self, configGroup, configs):
-        getattr(self, configGroup.lower().replace("-", "_")).set(configs)
+    def set(self, configs):
+        for config_group in configs:
+            if config_group in self.config_groups:
+                self.config_groups[config_group].set(configs[config_group])
+            else:
+                print("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
 
     @property
     def type(self):
@@ -253,6 +258,10 @@ class Roles(object):
     @type.setter
     def type(self, type):
         self._type = type
+
+    @property
+    def key(self):
+        return self.type
 
     @property
     def name(self):
@@ -291,6 +300,22 @@ class Roles(object):
         self._cdh_roles
 
     @property
+    def config_groups(self):
+        return self._config_groups
+
+    @config_groups.setter
+    def config_groups(self, config_groups):
+        self._config_groups = config_groups
+
+    @property
+    def hosts(self):
+        return self._hosts
+
+    @hosts.setter
+    def hosts(self, hosts):
+        self._hosts = hosts
+
+    @property
     def active(self):
         return self._active
 
@@ -301,8 +326,8 @@ class Roles(object):
 
 class Service(object):
     #groups = None
-    roleTypes = None
-    roleNames = None
+    #roleTypes = None
+    #roleNames = None
     def __init__(self, cdh_resource_root, cdh_cluster, cdh_service):
         #save are cloudera manager resource root reference
         self._cdh_resource_root = None
@@ -335,6 +360,7 @@ class Service(object):
                 temp = Roles(self.cdh_resource_root, self.cdh_cluster, self.cdh_service, role, role.type, role.name)
                 setattr(self, temp.name, temp)
                 self.roles[temp.name] = temp
+                self.roles[temp.key] = temp
 
 
         #get all roles that have no assigned hosts
@@ -343,6 +369,7 @@ class Service(object):
             if hasattr(self, temp.name) is False:
                 setattr(self, temp.name, temp )
                 self.roles[temp.name] = temp
+                self.roles[temp.key] = temp
 
 
         #for role in self.roles:
@@ -381,12 +408,24 @@ class Service(object):
                 break
         print "\n"
 
-    def set(self,role,configGroup,configs):
-        getattr(self, role.lower()).set(configGroup, configs)
+    def set(self,configs, restart=False):
+        for role in configs:
+            if role in self.roles:
+                self.roles[role].set(configs[role])
+                if restart:
+                    self.restart()
+            else:
+                print("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, self.name))
+
+
 
     def get(self,role,configGroup=None,configs=None):
 
         getattr(self, role.lower()).get(configGroup, configs)
+
+    @property
+    def key(self):
+        return self.cdh_service.type
 
     @property
     def name(self):
@@ -426,9 +465,6 @@ class Service(object):
 
 
 class Cluster(object):
-    #users cluster name from the command line
-    user_cluster_name = None
-
 
     def __init__(self, host, port, username, password, cluster=None):
         #save are cloudera manager resource root reference
@@ -437,24 +473,30 @@ class Cluster(object):
         self._cdh_cluster = None
         #all the cluster services
         self._cdh_services = None
+        #users cluster name from the command line
+        self._user_cluster_name = None
+
+        if host is None or port is None or username is None or password is None:
+            return None
 
         #initialize cloudera manager connection
         self.cdh_resource_root = ApiResource(host, server_port=port, username=username, password=password)
         #save the cluster name, might need if we have more than one cluster in cloudera manager
         self.user_cluster_name = cluster
+
         #get the cluster
         self.__get_cluster()
-
 
         self.__get_services()
 
     def __get_services(self):
-        self.services = {}
+        self.cdh_services = {}
 
         for service in self.cluster.get_all_services():
             temp = Service(self.cdh_resource_root, self.cluster, service)
             setattr(self, temp.name, temp)
-            self.services[temp.name] = temp
+            self.cdh_services[temp.name] = temp
+            self.cdh_services[temp.key] = temp
 
 
     def __get_cluster(self):
@@ -491,43 +533,45 @@ class Cluster(object):
             print ("You picked cluster {0}: Cluster Name: {1:20} Version: {2}".format(cluster_index, self.clusters[cluster_index].name, self.clusters[cluster_index].version))
             self.cluster = self.clusters[cluster_index]
 
-    def deployConfig(self,service):
-        getattr(self,service.lower()).deployConfig()
+    #def deployConfig(self,service):
+    #    getattr(self,service.lower()).deployConfig()
 
-    def restart(self, service):
-        getattr(self,service.lower()).restart()
+    #def restart(self, service):
+    #    getattr(self,service.lower()).restart()
 
-    def set(self, service, role, configGroup, configs):
-        getattr(self,service.lower()).set(role, configGroup, configs)
+    #def set(self, service, role, configGroup, configs):
+    #    getattr(self,service.lower()).set(role, configGroup, configs)
 
-    def get(self, service, role=None, configGroup=None, config=None):
-        if role is None:
-            return getattr(self,service.lower())
-        else:
-            return getattr(self,service.lower()).get(role, configGroup, config)
+    #def get(self, service, role=None, configGroup=None, config=None):
+    #    if role is None:
+    #        return getattr(self,service.lower())
+    #    else:
+    #        return getattr(self,service.lower()).get(role, configGroup, config)
 
-    ###
 
-    ###
     def update_configs(self, configs, restart=False):
         for service in configs:
             #iterate through roles
-            if service in self.services:
-                for role in configs[service]:
-                    #iterate through config groups
-                    if role in self.services[service].roles:
-                        for configGroup in configs[service][role]:
-                            if configGroup in self.services[service].roles[role].configGroups:
-                                self.services[service].roles[role].configGroups[configGroup].set(configs[service][role][configGroup])
-                                #self.set(service, role, configGroup, configs[service][role][configGroup])
-                            else:
-                                print("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(configGroup, role))
-                    else:
-                        print("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, service))
-                if restart:
-                    self.restart(service)
+            if service in self.cdh_services:
+                self.cdh_services[service].set(configs[service], restart)
+
+                #for role in configs[service]:
+                #    #iterate through config groups
+
+                #    if role.lower in self.cdh_services[service].roles:
+                #        for config_group in configs[service][role]:
+                #            if config_group in self.cdh_services[service].roles[role].config_groups:
+                #                self.cdh_services[service].roles[role].config_groups[config_group].set(configs[service][role][config_group])
+                #                #self.set(service, role, configGroup, configs[service][role][configGroup])
+                #            else:
+                #                print("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, role))
+                #    else:
+                #        print("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, service))
+                #if restart:
+                #    self.cdh_services[service].restart()
+                #self.restart(service)
             else:
-                print("Service: \"{0}\" doesn't exist in cluster: \"{1}\"".format(service, self.user_given_cluster_name))
+                print("Service: \"{0}\" doesn't exist in cluster: \"{1}\"".format(service, self.user_cluster_name))
 
 
     @property
@@ -547,11 +591,18 @@ class Cluster(object):
         self._cdh_cluster = cluster
 
     @property
-    def services(self):
+    def cdh_services(self):
         return self._cdh_services
 
-    @services.setter
-    def services(self, services):
+    @cdh_services.setter
+    def cdh_services(self, services):
         self._cdh_services = services
 
+    @property
+    def user_cluster_name(self):
+        return self._user_cluster_name
+
+    @user_cluster_name.setter
+    def user_cluster_name(self, cluster_name):
+        self._user_cluster_name = cluster_name
 

@@ -7,3 +7,4 @@ def add_cdh_command_line_options(argparser):
     argparser.add_argument("--password", type=str, help="Cloudera Manager Password", default="admin")
     argparser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is managed by "
                                                 "Cloudera Manager.", default="cluster")
+    return argparser

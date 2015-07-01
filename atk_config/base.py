@@ -19,6 +19,11 @@ RETRY = 5
 
 CONFLICT_RESOLUTION = ["interactive", "first", "second"]
 
+
+def check_dir_exists(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def open_json_conf(path):
     conf = None
     print path
@@ -142,3 +147,11 @@ def set_resolved(resolved, dictionary):
     for key, value in resolved:
         set_value(value, key, dictionary)
 
+def write_json_conf(json_dict, path):
+    try:
+        configJsonOpen = io.open(path, encoding="utf-8", mode="w")
+        configJsonOpen.write(unicode(json.dumps(json_dict, indent=True, sort_keys=True)))
+        configJsonOpen.close()
+    except IOError as e:
+        print("couldn't write {0}".format(path))
+        sys.exit(1)

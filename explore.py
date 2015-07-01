@@ -19,53 +19,53 @@ def pick(parentService, childService, parentServiceName, serviceList):
         list.append(service)
         count += 1
     service_index = input("Enter {0} Id : ".format(childService))
-    if service_index <= 0 or service_index > len(cluster.services):
+    if service_index <= 0 or service_index > len(cluster.cdh_services):
         raise Exception("Not a valid {0} Id".format(childService))
     service_index -= 1
     return list[service_index]
 
 dump = raw_input("dump all configs[yes]: ").strip()
 if dump == "yes":
-    for service in cluster.services:
-        for role in  cluster.services[service].roles:
-            for configGroup in cluster.services[service].roles[role].configGroups:
-                for config in cluster.services[service].roles[role].configGroups[configGroup].configs:
+    for service in cluster.cdh_services:
+        for role in cluster.cdh_services[service].roles:
+            for config_group in cluster.cdh_services[service].roles[role].config_groups:
+                for config in cluster.cdh_services[service].roles[role].config_groups[config_group].configs:
 
                     print("config name: {0} config description: {1}".format(config,
-                                                            cluster.services[service].
+                                                            cluster.cdh_services[service].
                                                             roles[role].
-                                                            configGroups[configGroup].
+                                                            config_groups[config_group].
                                                             configs[config].
                                                             cdh_config.description))
-                    print("\tconfig key: {0}.{1}.{2}.{3}".format(service,role,configGroup,cluster.services[service].
+                    print("\tconfig key: {0}.{1}.{2}.{3}".format(service,role,config_group,cluster.cdh_services[service].
                                                             roles[role].
-                                                            configGroups[configGroup].
+                                                            config_groups[config_group].
                                                             configs[config].name))
                     print("")
     sys.exit(0)
 
-service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.services)
+service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.cdh_services)
 print service_index
 
-pprint(cluster.services[service_index].roles)
-role_index = pick("service", "role", service_index, cluster.services[service_index].roles)
+pprint(cluster.cdh_services[service_index].roles)
+role_index = pick("service", "role", service_index, cluster.cdh_services[service_index].roles)
 print role_index
 
-configGroup_index = pick("role", "config group", role_index,
-                         cluster.services[service_index].roles[role_index].configGroups)
-print configGroup_index
+config_group_index = pick("role", "config group", role_index,
+                         cluster.cdh_services[service_index].roles[role_index].config_groups)
+print config_group_index
 
 
 print ""
-for config in cluster.services[service_index].roles[role_index].configGroups[configGroup_index].configs:
+for config in cluster.cdh_services[service_index].roles[role_index].config_groups[config_group_index].configs:
     print("config name: {0} config description: {1}".format(config,
-                                                            cluster.services[service_index].
+                                                            cluster.cdh_services[service_index].
                                                             roles[role_index].
-                                                            configGroups[configGroup_index].
+                                                            config_groups[config_group_index].
                                                             configs[config].
                                                             cdh_config.description))
-    print("\tconfig key: {0}.{1}.{2}.{3}".format(service_index,role_index,configGroup_index,cluster.services[service_index].
+    print("\tconfig key: {0}.{1}.{2}.{3}".format(service_index,role_index,config_group_index,cluster.cdh_services[service_index].
                                                             roles[role_index].
-                                                            configGroups[configGroup_index].
+                                                            config_groups[config_group_index].
                                                             configs[config].name))
     print("")

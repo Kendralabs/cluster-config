@@ -1,6 +1,6 @@
 {"HDFS": {
             "DATANODE": {
-                "DATANODE-BASE": {
+                "DATANODE_BASE": {
                     "dfs_datanode_failed_volumes_tolerated": "5",
                     "dfs_datanode_du_reserved": "11811160064"
                 }
@@ -8,7 +8,7 @@
         },
         "HBASE": {
             "REGIONSERVER": {
-                "REGIONSERVER-BASE": {
+                "REGIONSERVER_BASE": {
                     "hbase_regionserver_java_heapsize": "6442450944"
                 }
             }

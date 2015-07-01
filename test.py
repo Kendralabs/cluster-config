@@ -1,13 +1,6 @@
 from pprint import pprint
 
-role = { "type": "test"}
-print role["type"]
-pprint(role)
-role["bleh"] = "sdsdf"
-#setattr(role, "type1", "")
-role["type"] = ""
 
-print role.type
 
 somefunction="(memory/cores)"
 
@@ -17,5 +10,11 @@ pprint(somefunction)
 
 print eval(somefunction)
 
+
+bleh = {
+    "one" : 1+1
+    "two" : bleh["one"]
+
+}
 
 #copy user into auto config
