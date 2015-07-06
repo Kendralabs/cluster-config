@@ -36,24 +36,24 @@ TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB = TOTAL_ALLOCATABLE_MEMORY
 
 #TOTAL_ALLOCATABLE_MEMORY_PER_WORKER_NODE_FINAL_MiB
 #TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB= *MEMORY_FRACTION_RESERVED_FOR_YARN
-cdh = {}
-cdh["yarn.gateway.gateway_base.mapreduce_map_java_opts_max_heap"] = float(cluster.yarn.gateway.gateway_base.mapreduce_map_memory_mb.value) * RESOURCE_OVERCOMMIT_VALIDATION_THRESHOLD
-cdh["yarn.gateway.gateway_base.mapreduce_reduce_java_opts_max_heap"] = 2 * cdh["yarn.gateway.gateway_base.mapreduce_map_java_opts_max_heap"]
-cdh["yarn.gateway.gateway_base.mapreduce_map_memory_mb"] = TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB/TOTAL_ALLOCATABLE_CORES_PER_WORKER_NODE_MiB
-cdh["yarn.gateway.gateway_base.mapreduce_reduce_memory_mb"] = 2 * cdh["yarn.gateway.gateway_base.mapreduce_map_memory_mb"]
-cdh["yarn.resourcemanager.resourcemanager_base.yarn_scheduler_minimum_allocation_mb"] = cdh["yarn.gateway.gateway_base.mapreduce_map_memory_mb"]
-cdh["yarn.resourcemanager.resourcemanager_base.yarn_scheduler_maximum_allocation_mb"] = TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB
-cdh["yarn.nodemanager.nodemanager_base.yarn_nodemanager_resource_memory_mb"] = TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB
+cdh = { }
+cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] = int(float(cluster.yarn.gateway.gateway_base.mapreduce_map_memory_mb.value) * RESOURCE_OVERCOMMIT_VALIDATION_THRESHOLD)
+cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_JAVA_OPTS_MAX_HEAP"] = int(2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"])
+cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] = int(TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB/TOTAL_ALLOCATABLE_CORES_PER_WORKER_NODE_MiB)
+cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_MEMORY_MB"] = int(2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
+cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MINIMUM_ALLOCATION_MB"] = cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
+cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] = TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB
+cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"] = TOTAL_ALLOCATABLE_MEMORY_FOR_YARN_PER_WORKER_NODE_MiB
 
-CONTAINERS_ACCROSS_CLUSTER = ((cdh["yarn.nodemanager.nodemanager_base.yarn_nodemanager_resource_memory_mb"]/cdh["yarn.gateway.gateway_base.mapreduce_map_memory_mb"]) - 2) * NUMBER_OF_WORKER_NODES - 2
-GIRAPH_WORKERS_ACCROSS_CLUSTER = ((cdh["yarn.nodemanager.nodemanager_base.yarn_nodemanager_resource_memory_mb"]/cdh["yarn.gateway.gateway_base.mapreduce_map_memory_mb"]) - 2) * NUMBER_OF_WORKER_NODES - 2
+CONTAINERS_ACCROSS_CLUSTER = int(((cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"]/cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]) - 2) * NUMBER_OF_WORKER_NODES - 2)
+GIRAPH_WORKERS_ACCROSS_CLUSTER = int(((cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"]/cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]) - 2) * NUMBER_OF_WORKER_NODES - 2)
 
 atk = {}
-atk["intel.analytics.engine.spark.conf.properties.spark.executor.memory"] = cdh["yarn.gateway.gateway_base.mapreduce_map_memory_mb"]
-atk["intel.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"] = CONTAINERS_ACCROSS_CLUSTER/NUMBER_OF_CONCURRENT_THREADS
-atk["intel.analytics.api.giraph.giraph.maxWorkers"] = CONTAINERS_ACCROSS_CLUSTER/NUMBER_OF_CONCURRENT_THREADS
-atk["intel.analytics.api.giraph.mapreduce.map.memory.mb"] = cdh["yarn.gateway.gateway_base.mapreduce_map_memory_mb"]
-atk["intel.analytics.api.giraph.mapreduce.map.java.opts.max.heap"] = cdh["yarn.gateway.gateway_base.mapreduce_map_java_opts_max_heap"]
+atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.memory"] = cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
+atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numexecutors"] = int(CONTAINERS_ACCROSS_CLUSTER/NUMBER_OF_CONCURRENT_THREADS)
+atk["intel.taproot.analytics.api.giraph.giraph.maxworkers"] = int(CONTAINERS_ACCROSS_CLUSTER/NUMBER_OF_CONCURRENT_THREADS)
+atk["intel.taproot.analytics.api.giraph.mapreduce.map.memory.mb"] = cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
+atk["intel.taproot.analytics.api.giraph.mapreduce.map.java.opts.max.heap"] = cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]
 
 
 

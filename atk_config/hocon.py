@@ -1,4 +1,0 @@
-
-
-def write( dictionary, path):
-

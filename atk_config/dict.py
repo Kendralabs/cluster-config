@@ -1,40 +1,29 @@
-from pprint import pprint
-import os, io, json, sys, shutil
-from pyhocon import ConfigFactory
+import sys
+import atk_config as atk
 
-CONFIG_FILE_NAME = "application.json"
+def to_string(dictionary):
+    dictionary_string = ""
+    for key in dictionary:
+        if type(dictionary[key]) is dict:
+            dictionary_string += "{0} {{".format(key)
 
-CONFIG_DIR = "conf"
-CONFIG_EXT = "conf"
-JSON_EXT = "json"
-CONFIG_USER = "user"
-CONFIG_GEN = "generated"
+        if atk.base._recurse_type_check(dictionary, key):
+            dictionary_string += to_string(dictionary[key])
 
-CDH_CONFIG_NAME = "cdh"
-CDH_USER_CONFIG_NAME = "user-cdh"
-
-SINGLE = ["user", "auto"]
-PERSISTANT = ["au", "ag"]
-RETRY = 5
-
-CONFLICT_RESOLUTION = ["interactive", "first", "second"]
+        if type(dictionary[key]) is dict:
+            dictionary_string += "}}".format(key)
+    return dictionary_string
 
 
-def check_dir_exists(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
 
-def open_json_conf(path):
-    conf = None
-    print path
-    try:
-        configJsonOpen = io.open(path, encoding="utf-8", mode="r")
-        conf = json.loads(configJsonOpen.read())
-        configJsonOpen.close()
-    except IOError as e:
-        print("Couldn't open json file: {0}".format(path))
-    return conf
-
+def nest(nested, split, value):
+    if len(split) > 0:
+        if split[0] not in nested:
+            nested[split[0]] = {}
+        if len(split) == 1:
+            nested[split[0]] = value
+        elif len(split) > 1:
+            nest(nested[split[0]], split[1:], value)
 
 def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_preference="first"):
 
@@ -93,32 +82,32 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
     print("\nKey merge conflict: {0}".format('.'.join(conflict)))
     user_value = get_value(conflict, user_configs)
 
-    print("[{0}]User value: {1}".format(SINGLE[0], user_value))
+    print("[{0}]User value: {1}".format(atk.SINGLE[0], user_value))
     auto_value = get_value(conflict, auto_configs)
-    print("[{0}]Auto gen value: {1}".format(SINGLE[1], auto_value))
-    print("Optionally you can accept [{0}] all user values or [{1}] all auto generated values.".format(PERSISTANT[0], PERSISTANT[1]))
+    print("[{0}]Auto gen value: {1}".format(atk.SINGLE[1], auto_value))
+    print("Optionally you can accept [{0}] all user values or [{1}] all auto generated values.".format(atk.PERSISTANT[0], atk.PERSISTANT[1]))
     while keep is None:
-        if RETRY <= 0:
+        if atk.RETRY <= 0:
             print("Too many retries no valid entry.")
             sys.exit(1)
 
-        keep = raw_input("Would you like to keep the user value or the auto generated value?[[{0}|{1}][{2}|{3}]]: ".format(SINGLE[0], PERSISTANT[0], SINGLE[1], PERSISTANT[1])).strip()
-        if keep not in SINGLE and keep not in PERSISTANT:
+        keep = raw_input("Would you like to keep the user value or the auto generated value?[[{0}|{1}][{2}|{3}]]: ".format(atk.SINGLE[0], atk.PERSISTANT[0], atk.SINGLE[1], atk.PERSISTANT[1])).strip()
+        if keep not in atk.SINGLE and keep not in atk.PERSISTANT:
             print("Not a valid answer please try again.")
             keep = None
-            RETRY -= 1
+            atk.RETRY -= 1
 
-    if keep in SINGLE:
-        return None, user_value if keep == SINGLE[0] else auto_value
+    if keep in atk.SINGLE:
+        return None, user_value if keep == atk.SINGLE[0] else auto_value
     else:
-        return keep, user_value if keep == PERSISTANT[0] else auto_value
+        return keep, user_value if keep == atk.PERSISTANT[0] else auto_value
 
 def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference):
     resolved = []
     if conflict_resolution_preference is "first":
-        keep = PERSISTANT[0]
+        keep = atk.PERSISTANT[0]
     elif conflict_resolution_preference is "second":
-        keep = PERSISTANT[1]
+        keep = atk.PERSISTANT[1]
     else:
         keep = None
     for conflict in conflicts:
@@ -146,12 +135,3 @@ def get_value(config_keys, configs):
 def set_resolved(resolved, dictionary):
     for key, value in resolved:
         set_value(value, key, dictionary)
-
-def write_json_conf(json_dict, path):
-    try:
-        configJsonOpen = io.open(path, encoding="utf-8", mode="w")
-        configJsonOpen.write(unicode(json.dumps(json_dict, indent=True, sort_keys=True)))
-        configJsonOpen.close()
-    except IOError as e:
-        print("couldn't write {0}".format(path))
-        sys.exit(1)

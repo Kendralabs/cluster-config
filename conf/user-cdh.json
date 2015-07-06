@@ -9,10 +9,10 @@
         "somevalue": "myvalue"
     }
 },
-    "HBASE": {
-        "REGIONSERVER": {
-        "REGIONSERVER_BASE": {
-            "hbase_regionserver_java_heapsize": "6442450944"
+    "yarn": {
+        "gateway": {
+        "gateway_base": {
+            "mapreduce_map_java_opts_max_heap": "777"
         }
         }
     }

@@ -1,16 +1,23 @@
-{"HDFS": {
-            "DATANODE": {
-                "DATANODE_BASE": {
-                    "dfs_datanode_failed_volumes_tolerated": "5",
-                    "dfs_datanode_du_reserved": "11811160064"
-                }
-            }
-        },
-        "HBASE": {
-            "REGIONSERVER": {
-                "REGIONSERVER_BASE": {
-                    "hbase_regionserver_java_heapsize": "6442450944"
-                }
-            }
-        }
-    }
+{
+ "YARN": {
+  "GATEWAY": {
+   "GATEWAY_BASE": {
+    "MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP": 819, 
+    "MAPREDUCE_MAP_MEMORY_MB": 5545446772572, 
+    "MAPREDUCE_REDUCE_JAVA_OPTS_MAX_HEAP": 1638, 
+    "MAPREDUCE_REDUCE_MEMORY_MB": 11090893545144
+   }
+  }, 
+  "NODEMANAGER": {
+   "NODEMANAGER_BASE": {
+    "YARN_NODEMANAGER_RESOURCE_MEMORY_MB": 141963437377847.3
+   }
+  }, 
+  "RESOURCEMANAGER": {
+   "RESOURCEMANAGER_BASE": {
+    "YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB": 141963437377847.3, 
+    "YARN_SCHEDULER_MINIMUM_ALLOCATION_MB": 5545446772572
+   }
+  }
+ }
+}

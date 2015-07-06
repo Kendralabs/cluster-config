@@ -1,12 +1,10 @@
-import base
 from cm_api.api_client import ApiResource
 from cm_api.endpoints import hosts, roles, role_config_groups
-from subprocess import call
-from os import system
-import hashlib, time, argparse, os, time, sys, getpass
-from types import MethodType
-import codecs
+from urllib2 import URLError
+import time
+import sys
 import re
+import atk_config as atk
 from pprint import pprint
 
 
@@ -85,14 +83,18 @@ class Config(object):
             return self.cdh_config.default
 
     def set(self, value):
-        self.cdh_config.value = self.cdh_group.update_config({self.cdg_config.name: value})[self.cdh_config.name]
+        self.cdh_config.value = self.cdh_group.update_config({self.cdh_config.name: value})[self.cdh_config.name]
 
     @property
-    def name(self):
-        name = self.cdh_config.name.lower()
+    def key(self):
+        name = self.cdh_config.name.upper()
         for r in ["-", "/"]:
             name = name.replace(r, "_")
         return name
+
+    @property
+    def name(self):
+        return self.key.lower()
 
     @property
     def cdh_group(self):
@@ -139,14 +141,22 @@ class Config_Group(object):
         for name, config in self.cdh_group.get_config(view='full').items():
             temp = Config(self.cdh_group, config)
             setattr(self, temp.name, temp)
-            self.configs[name] = temp
+            self.configs[temp.key] = temp
 
 
     def __update(self):
         self.__get_configs()
 
     def set(self, configs):
-        self.cdh_group.update_config(configs)
+        #re key our configs to use actual CDH config key
+        temp = {}
+        for config in configs:
+            if config in self.configs:
+                print self.configs[config].cdh_config.name
+                temp[self.configs[config].cdh_config.name] = configs[config]
+            else:
+                atk.log.error("No configuration key found for: {0}".format(config))
+        self.cdh_group.update_config(temp)
         self.__update()
 
     @property
@@ -229,8 +239,8 @@ class Roles(object):
             if group.roleType == self.type:
                 config_group = Config_Group(self.cdh_service, group)
                 setattr(self, config_group.name, config_group)
-                self.config_groups[config_group.name] = config_group
                 self.config_groups[config_group.key] = config_group
+#                self.config_groups[config_group.key] = config_group
 
 
     def add(self, cdh_role):
@@ -246,10 +256,11 @@ class Roles(object):
 
     def set(self, configs):
         for config_group in configs:
+
             if config_group in self.config_groups:
                 self.config_groups[config_group].set(configs[config_group])
             else:
-                print("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
+                atk.log.error("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
 
     @property
     def type(self):
@@ -261,7 +272,7 @@ class Roles(object):
 
     @property
     def key(self):
-        return self.type
+        return self.type.upper()
 
     @property
     def name(self):
@@ -349,8 +360,6 @@ class Service(object):
 
 
     def __get_roles(self):
-        #self.roleNames = []
-        #self.roleTypes = []
 
         #get all roles assigned to hosts
         for role in self.cdh_service.get_all_roles():
@@ -359,22 +368,16 @@ class Service(object):
             else:
                 temp = Roles(self.cdh_resource_root, self.cdh_cluster, self.cdh_service, role, role.type, role.name)
                 setattr(self, temp.name, temp)
-                self.roles[temp.name] = temp
                 self.roles[temp.key] = temp
+
 
 
         #get all roles that have no assigned hosts
         for config_group in role_config_groups.get_all_role_config_groups(self.cdh_resource_root, self.cdh_service.name, self.cdh_cluster.name):
             temp = Roles(self.cdh_resource_root, self.cdh_cluster,  self.cdh_service, None, config_group.roleType, config_group.roleType, False)
             if hasattr(self, temp.name) is False:
-                setattr(self, temp.name, temp )
-                self.roles[temp.name] = temp
+                setattr(self, temp.name, temp)
                 self.roles[temp.key] = temp
-
-
-        #for role in self.roles:
-        #    print "\troles in :", role
-        #self.roleTypes = set(self.roleTypes)
 
 
     def restart(self):
@@ -425,7 +428,7 @@ class Service(object):
 
     @property
     def key(self):
-        return self.cdh_service.type
+        return self.cdh_service.type.upper()
 
     @property
     def name(self):
@@ -495,20 +498,24 @@ class Cluster(object):
         for service in self.cluster.get_all_services():
             temp = Service(self.cdh_resource_root, self.cluster, service)
             setattr(self, temp.name, temp)
-            self.cdh_services[temp.name] = temp
             self.cdh_services[temp.key] = temp
+
 
 
     def __get_cluster(self):
         #get all the clusters managed by cdh
-        self.clusters = self.cdh_resource_root.get_all_clusters()
+        try:
+            self.clusters = self.cdh_resource_root.get_all_clusters()
+        except URLError:
+            atk.log.fatal("couldn't connect to cluster management node.")
+
         #if we have more than one cluster we need to pick witch one to configure against
         if len(self.clusters) > 1:
-            print("More than one Cluster Detected.")
+            atk.log.info("More than one Cluster Detected.")
             self.__select_cluster()
         #else pick the only cluster
         elif len(self.clusters) == 1:
-            print("cluster selected: {0}".format(self.clusters[0].name))
+            atk.log.info("cluster selected: {0}".format(self.clusters[0].name))
             self.cluster = self.clusters[0]
 
 
@@ -520,7 +527,8 @@ class Cluster(object):
                 if c.displayName == self.user_given_cluster_name or c.name == self.user_given_cluster_name:
                     self.cluster = c
             if self.cluster is None:
-                raise Exception("Couldn't find cluster: '{0}'".format(self.user_given_cluster_name))
+                atk.log.fatal("Couldn't find cluster: '{0}'".format(self.user_given_cluster_name))
+
         else:
             print("Please choose a cluster.")
             count = 0
@@ -529,47 +537,16 @@ class Cluster(object):
                 count += 1
             cluster_index = input("Enter the clusters Id : ") - 1
             if cluster_index <= 0 or cluster_index > (count-1):
-                raise Exception("Not a valid cluster Id")
+                atk.log.fatal("Invalid cluster id selected.")
+
             print ("You picked cluster {0}: Cluster Name: {1:20} Version: {2}".format(cluster_index, self.clusters[cluster_index].name, self.clusters[cluster_index].version))
             self.cluster = self.clusters[cluster_index]
-
-    #def deployConfig(self,service):
-    #    getattr(self,service.lower()).deployConfig()
-
-    #def restart(self, service):
-    #    getattr(self,service.lower()).restart()
-
-    #def set(self, service, role, configGroup, configs):
-    #    getattr(self,service.lower()).set(role, configGroup, configs)
-
-    #def get(self, service, role=None, configGroup=None, config=None):
-    #    if role is None:
-    #        return getattr(self,service.lower())
-    #    else:
-    #        return getattr(self,service.lower()).get(role, configGroup, config)
-
 
     def update_configs(self, configs, restart=False):
         for service in configs:
             #iterate through roles
             if service in self.cdh_services:
                 self.cdh_services[service].set(configs[service], restart)
-
-                #for role in configs[service]:
-                #    #iterate through config groups
-
-                #    if role.lower in self.cdh_services[service].roles:
-                #        for config_group in configs[service][role]:
-                #            if config_group in self.cdh_services[service].roles[role].config_groups:
-                #                self.cdh_services[service].roles[role].config_groups[config_group].set(configs[service][role][config_group])
-                #                #self.set(service, role, configGroup, configs[service][role][configGroup])
-                #            else:
-                #                print("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, role))
-                #    else:
-                #        print("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, service))
-                #if restart:
-                #    self.cdh_services[service].restart()
-                #self.restart(service)
             else:
                 print("Service: \"{0}\" doesn't exist in cluster: \"{1}\"".format(service, self.user_cluster_name))
 
