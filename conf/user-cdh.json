@@ -1,18 +1,18 @@
 {"HDFS": {
     "DATANODE": {
         "DATANODE_BASE": {
-            "dfs_datanode_failed_volumes_tolerated": "1",
-            "dfs_datanode_du_reserved": "11111111"
+            "DFS_DATANODE_FAILED_VOLUMES_TOLERATED": "1",
+            "DFS_DATANODE_DU_RESERVED": "11111111"
         }
     },
     "newkey":{
         "somevalue": "myvalue"
     }
 },
-    "yarn": {
-        "gateway": {
-        "gateway_base": {
-            "mapreduce_map_java_opts_max_heap": "777"
+    "YARN": {
+        "GATEWAY": {
+        "GATEWAY_BASE": {
+            "MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP": "777"
         }
         }
     }

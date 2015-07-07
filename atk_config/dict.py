@@ -1,19 +1,18 @@
 import sys
 import atk_config as atk
 
-def to_string(dictionary):
-    dictionary_string = ""
-    for key in dictionary:
-        if type(dictionary[key]) is dict:
-            dictionary_string += "{0} {{".format(key)
-
-        if atk.base._recurse_type_check(dictionary, key):
-            dictionary_string += to_string(dictionary[key])
-
-        if type(dictionary[key]) is dict:
-            dictionary_string += "}}".format(key)
-    return dictionary_string
-
+#def to_string(dictionary):
+#    dictionary_string = ""
+#    for key in dictionary:
+#        if type(dictionary[key]) is dict:
+#            dictionary_string += "{0} {{".format(key)
+#
+#        if atk.base._recurse_type_check(dictionary, key):
+##            dictionary_string += to_string(dictionary[key])#
+#
+#        if type(dictionary[key]) is dict:
+#            dictionary_string += "}}".format(key)
+#    return dictionary_string
 
 
 def nest(nested, split, value):
@@ -24,6 +23,7 @@ def nest(nested, split, value):
             nested[split[0]] = value
         elif len(split) > 1:
             nest(nested[split[0]], split[1:], value)
+
 
 def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_preference="first"):
 
@@ -37,16 +37,13 @@ def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_prefere
 
     return temp
 
+
 def _recurse_type_check(dictionary, key):
     return type(dictionary[key]) is dict or type(dictionary[key]) is list
 
+
 def _merge_dicts(dict_one, dict_two):
     temp = {}
-    #print ""
-    #print "merge dicts"
-    #pprint(dict_one)
-    #pprint(dict_two)
-    #print "--"
     temp = dict_one.copy()
     #pprint(temp)
     for key in dict_two:
@@ -60,6 +57,7 @@ def _merge_dicts(dict_one, dict_two):
             #print "continue"
         #pprint(temp)
     return temp
+
 
 def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
     conflict_keys = []
@@ -100,7 +98,9 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
     if keep in atk.SINGLE:
         return None, user_value if keep == atk.SINGLE[0] else auto_value
     else:
+        atk.log.info("Auto resolving conflicts. Defaulting to {0} value".format("user" if keep == atk.PERSISTANT[0] else "auto generated"))
         return keep, user_value if keep == atk.PERSISTANT[0] else auto_value
+
 
 def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference):
     resolved = []
@@ -116,12 +116,14 @@ def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_r
 
     return resolved
 
+
 def set_value(value, config_keys, configs):
     for key in config_keys:
         if key in configs and _recurse_type_check(configs, key):
             return set_value(value, config_keys[1:], configs[key])
         elif key in configs:
             configs[key] = value
+
 
 
 def get_value(config_keys, configs):
@@ -131,6 +133,7 @@ def get_value(config_keys, configs):
             return get_value(config_keys[1:], configs[key])
         elif configs[key]:
             return configs[key]
+
 
 def set_resolved(resolved, dictionary):
     for key, value in resolved:

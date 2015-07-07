@@ -9,8 +9,6 @@ from pprint import pprint
 
 
 class Hosts(object):
-
-
     def __init__(self, cdh_resource_root, hostId):
         self._cdh_resource_root = None
         self._hosts = {}
@@ -67,8 +65,8 @@ class Hosts(object):
     def hosts(self, hosts):
         self._hosts = hosts
 
-class Config(object):
 
+class Config(object):
     def __init__(self, cdh_group, cdh_config):
         self._cdh_group = None
         self._cdh_config = None
@@ -152,12 +150,13 @@ class Config_Group(object):
         temp = {}
         for config in configs:
             if config in self.configs:
-                print self.configs[config].cdh_config.name
                 temp[self.configs[config].cdh_config.name] = configs[config]
             else:
-                atk.log.error("No configuration key found for: {0}".format(config))
+                atk.log.warning("No configuration key found for: {0}".format(config))
+        atk.log.info("Updating config group: {0}".format(self.key))
         self.cdh_group.update_config(temp)
         self.__update()
+        return temp
 
     @property
     def key(self):
@@ -198,7 +197,6 @@ class Config_Group(object):
 
 
 class Roles(object):
-
     def __init__(self, cdh_resource_root, cdh_cluster, cdh_service, cdh_role, cdh_role_type=None, cdh_role_name=None, active=True):
         #save are cloudera manager resource root reference
         self.cdh_resource_root = cdh_resource_root
@@ -255,12 +253,16 @@ class Roles(object):
             self.hosts = Hosts(self.cdh_resource_root, role.hostRef.hostId)
 
     def set(self, configs):
+        updated = {}
         for config_group in configs:
-
             if config_group in self.config_groups:
-                self.config_groups[config_group].set(configs[config_group])
+                update = self.config_groups[config_group].set(configs[config_group])
+                updated[config_group] = update
+                atk.log.info("Updated {0} configuration/s.".format(len(update)))
             else:
-                atk.log.error("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
+                atk.log.warning("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
+
+
 
     @property
     def type(self):
@@ -336,9 +338,6 @@ class Roles(object):
 
 
 class Service(object):
-    #groups = None
-    #roleTypes = None
-    #roleNames = None
     def __init__(self, cdh_resource_root, cdh_cluster, cdh_service):
         #save are cloudera manager resource root reference
         self._cdh_resource_root = None
@@ -353,11 +352,7 @@ class Service(object):
         self.cdh_cluster = cdh_cluster
         self.cdh_service = cdh_service
 
-        #self.groups = {}
-
         self.__get_roles()
-
-
 
     def __get_roles(self):
 
@@ -369,8 +364,6 @@ class Service(object):
                 temp = Roles(self.cdh_resource_root, self.cdh_cluster, self.cdh_service, role, role.type, role.name)
                 setattr(self, temp.name, temp)
                 self.roles[temp.key] = temp
-
-
 
         #get all roles that have no assigned hosts
         for config_group in role_config_groups.get_all_role_config_groups(self.cdh_resource_root, self.cdh_service.name, self.cdh_cluster.name):
@@ -411,16 +404,16 @@ class Service(object):
                 break
         print "\n"
 
-    def set(self,configs, restart=False):
+    def set(self, configs, restart=False):
         for role in configs:
             if role in self.roles:
+
                 self.roles[role].set(configs[role])
+
                 if restart:
                     self.restart()
             else:
-                print("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, self.name))
-
-
+                atk.log.warning("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, self.name))
 
     def get(self,role,configGroup=None,configs=None):
 
@@ -490,6 +483,7 @@ class Cluster(object):
         #get the cluster
         self.__get_cluster()
 
+        #get cluster services
         self.__get_services()
 
     def __get_services(self):
@@ -548,7 +542,7 @@ class Cluster(object):
             if service in self.cdh_services:
                 self.cdh_services[service].set(configs[service], restart)
             else:
-                print("Service: \"{0}\" doesn't exist in cluster: \"{1}\"".format(service, self.user_cluster_name))
+                atk.log.error("Service: \"{0}\" doesn't exist in cluster: \"{1}\"".format(service, self.user_cluster_name))
 
 
     @property

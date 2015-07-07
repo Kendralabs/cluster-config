@@ -21,7 +21,7 @@ def main():
         if user_config:
             #merge config dictionaries and resolve conflicts
             configs = atk.dict.merge_dicts(user_config, configs)
-        pprint(configs)
+
 
         #if update cdh is "yes" then we iterate and update all the specified keys
         if args.update_cdh == "yes":
