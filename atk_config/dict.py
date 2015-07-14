@@ -1,31 +1,46 @@
 import sys
 import atk_config as atk
+from pprint import pprint
 
-#def to_string(dictionary):
-#    dictionary_string = ""
-#    for key in dictionary:
-#        if type(dictionary[key]) is dict:
-#            dictionary_string += "{0} {{".format(key)
-#
-#        if atk.base._recurse_type_check(dictionary, key):
-##            dictionary_string += to_string(dictionary[key])#
-#
-#        if type(dictionary[key]) is dict:
-#            dictionary_string += "}}".format(key)
-#    return dictionary_string
+def nest(nested, keys, value):
+    """
+    turns a list of keys into a nested dictionary with the last key getting value assigned to it.
+    given
+    temp = {}
+    split = [ "one", "two", "three" ]
+    value = 3
+    you will end up with
+    temp["one"]["two"]["three"] = 3
+    :param nested: some dictionary
+    :param keys: the key list
+    :param value: the value of the last split element
+    """
+    if keys and len(keys) > 0:
+        if keys[0] not in nested:
+            nested[keys[0]] = {}
 
-
-def nest(nested, split, value):
-    if len(split) > 0:
-        if split[0] not in nested:
-            nested[split[0]] = {}
-        if len(split) == 1:
-            nested[split[0]] = value
-        elif len(split) > 1:
-            nest(nested[split[0]], split[1:], value)
+        if len(keys) == 1:
+            nested[keys[0]] = value
+        elif len(keys) > 1:
+            nest(nested[keys[0]], keys[1:], value)
 
 
 def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_preference="first"):
+    """
+    Takes to dictionaries and does a nested merge. Key conflicts are resolved either by defaulting to
+    first or second dictionary or interactively.
+
+
+    :param first_dictionary: The first dictionary to merge
+    :param second_dictionary: the second dictionary to merge
+    :param conflict_resolution_preference: The conflict resolution preference[ "first", "second", "interactive"]
+        "first" defaults the value of any conflict to the first dictionary
+        "second" defaults the value of any conflict to the second dictionary
+        "interactive" no defaults you are asked at runtime
+    :return: merged dictionary with resolved conflicts
+    """
+    if first_dictionary is None or second_dictionary is None:
+        return None
 
     conflicts = find_dict_conflicts(first_dictionary, second_dictionary)
 
@@ -39,38 +54,71 @@ def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_prefere
 
 
 def _recurse_type_check(dictionary, key):
-    return type(dictionary[key]) is dict or type(dictionary[key]) is list
+    """
+    Checks of the dictionary key is a list or another dictionary
+    :param dictionary: The dictionary that has the key
+    :param key: the key we are checking
+    :return:
+    """
+    if dictionary and key:
+        return type(dictionary[key]) is dict or type(dictionary[key]) is list
+    else:
+        return False
 
 
-def _merge_dicts(dict_one, dict_two):
+def _merge_dicts(first_dictionary, second_dictionary):
+    """
+    merge two nested dictionaries. Non dictionary types will be ignored. Conflicting keys are ignored.
+    We want a merged dictionary with all the same keys. Conflicting dictionary values will be delt with later.
+
+    :param first_dictionary: first dictionary to merge
+    :param second_dictionary: second dictionary to merge
+    :return:
+    """
+    if type(first_dictionary) and type(second_dictionary) is not dict:
+        return None
+
     temp = {}
-    temp = dict_one.copy()
-    #pprint(temp)
-    for key in dict_two:
-        #print "dict one: {0}".format(hasattr(dict_one,key))
-        if _recurse_type_check(dict_two, key) and key in dict_one:
-            #print "recurse: {0}".format(key)
-            temp[key] = _merge_dicts(dict_one[key], dict_two[key])
-        elif key not in dict_one:
-            #print "no matching key: {0}".format(key)
-            temp[key] = dict_two[key]
-            #print "continue"
-        #pprint(temp)
+    temp = first_dictionary.copy()
+
+    for key in second_dictionary:
+
+        if _recurse_type_check(second_dictionary, key) and key in first_dictionary:
+
+            temp[key] = _merge_dicts(first_dictionary[key], second_dictionary[key])
+        elif key not in first_dictionary:
+
+            temp[key] = second_dictionary[key]
+
     return temp
 
 
 def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
+    """
+    find key conflicts between two dictionaries.
+    A key is not considered conflicting if it's the same value in both dictionaries
+
+    :param first_dictionary:
+    :param second_dictionary:
+    :param config_key: list of of our current nested key [ lvl0, lvl1, lvl3, ...]
+    :return:
+    """
+
     conflict_keys = []
+
     for key in first_dictionary:
         #if the value of the key type is dict and the key exists in auto_generated recurse
         if _recurse_type_check(first_dictionary, key) and key in second_dictionary:
+            print "recurse: ", key
             config_key.append(key)
             for add_key in find_dict_conflicts(first_dictionary[key], second_dictionary[key], config_key):
                 conflict_keys.append(add_key)
             config_key.pop()
         elif key not in second_dictionary or second_dictionary.get(key) is None or second_dictionary.get(key) == first_dictionary.get(key):
+            print "continue: ", key
             continue
         else:
+            print "temp: key :", key
             temp = [key]
             conflict_keys.append(config_key + temp)
     return conflict_keys
