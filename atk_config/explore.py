@@ -1,4 +1,5 @@
-from atk_config import cdh,cli
+from atk_config import cli
+from atk_config.cdh.cluster import Cluster
 import hashlib, re, time, argparse, os, time, sys, getpass
 from pprint import pprint
 
@@ -9,7 +10,7 @@ args = parser.parse_args()
 
 def main():
 
-    cluster = cdh.Cluster(args.host, args.port, args.username, args.password, args.cluster)
+    cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     def pick(parentService, childService, parentServiceName, serviceList):
         print("Available {0} types on {1}: '{2}'".format(childService, parentService,parentServiceName))

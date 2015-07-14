@@ -125,6 +125,14 @@ def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
 
 
 def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
+    """
+    resolve conflicts either by asking or going forward with defaults form command line
+    :param conflict: conflicting kye
+    :param user_configs: value for first conflicting key
+    :param auto_configs: value for second conflicting key
+    :param keep: answer for subsequent request
+    :return: resolved value for key
+    """
     print("\nKey merge conflict: {0}".format('.'.join(conflict)))
     user_value = get_value(conflict, user_configs)
 
@@ -151,6 +159,14 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
 
 
 def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference):
+    """
+
+    :param conflicts:
+    :param first_dictionary:
+    :param second_dictionary:
+    :param conflict_resolution_preference:
+    :return:
+    """
     resolved = []
     if conflict_resolution_preference is "first":
         keep = atk.PERSISTANT[0]

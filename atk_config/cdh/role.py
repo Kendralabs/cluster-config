@@ -1,10 +1,13 @@
+from atk_config.cdh.config import *
+from atk_config.cdh.config_group import *
+from atk_config.cdh.hosts import *
 from cm_api.api_client import ApiResource
 from cm_api.endpoints import hosts, roles, role_config_groups
 from urllib2 import URLError
 import time
 import sys
 import re
-from atk_config import cdh
+from atk_config import config
 from pprint import pprint
 
 
@@ -62,7 +65,7 @@ class Role(object):
         if self.hosts:
             self.hosts.add(role.hostRef.hostId)
         else:
-            self.hosts = atk.cdh.Hosts(self.cdh_resource_root, role.hostRef.hostId)
+            self.hosts = Hosts(self.cdh_resource_root, role.hostRef.hostId)
 
     def set(self, configs):
         updated = {}
