@@ -4,8 +4,8 @@ from urllib2 import URLError
 import time
 import sys
 import re
-from atk_config.cdh.role import Role
-import atk_config.log as log
+from cluster_config.cdh.role import Role
+import cluster_config.log as log
 from pprint import pprint
 
 

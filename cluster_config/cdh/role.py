@@ -1,14 +1,7 @@
-from atk_config.cdh.config import *
-from atk_config.cdh.config_group import *
-from atk_config.cdh.hosts import *
-from cm_api.api_client import ApiResource
-from cm_api.endpoints import hosts, roles, role_config_groups
-from urllib2 import URLError
-import time
-import sys
-import re
-from atk_config import config
-from pprint import pprint
+from cluster_config.cdh.config_group import Config_Group
+from cluster_config.cdh.hosts import Hosts
+from cm_api.endpoints import role_config_groups
+
 
 
 class Role(object):

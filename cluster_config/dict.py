@@ -1,5 +1,5 @@
 import sys
-import atk_config as atk
+import cluster_config as atk
 from pprint import pprint
 
 def nest(nested, keys, value):
@@ -160,7 +160,7 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
 
 def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference):
     """
-
+    iterate through all the conflicts and save resolution
     :param conflicts:
     :param first_dictionary:
     :param second_dictionary:
@@ -174,6 +174,7 @@ def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_r
         keep = atk.PERSISTANT[1]
     else:
         keep = None
+
     for conflict in conflicts:
         keep, value = resolve_conflict(conflict, first_dictionary, second_dictionary, keep)
         resolved.append((conflict, value))

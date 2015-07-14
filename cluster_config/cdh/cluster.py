@@ -4,8 +4,8 @@ from urllib2 import URLError
 import time
 import sys
 import re
-from atk_config.cdh.service import Service
-from atk_config import log
+from cluster_config.cdh.service import Service
+from cluster_config import log
 from pprint import pprint
 
 

@@ -1,9 +1,9 @@
 from __future__ import print_function
-
 import argparse
+import cluster_config as atk
+from cluster_config import log
+from cluster_config.cdh.cluster import Cluster
 
-from pprint import pprint
-import atk_config as atk
 
 parser = argparse.ArgumentParser(description="Auto generate various CDH configurations based on system resources")
 parser.add_argument("--formula", type=str, help="Auto generation formula file.")
@@ -16,7 +16,7 @@ def main():
 
     if args.formula:
         #get the cluster reference
-        cluster = atk.cdh.Cluster(args.host, args.port, args.username, args.password, args.cluster)
+        cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
         if cluster:
             #execute formula
@@ -24,7 +24,7 @@ def main():
             try:
                 execfile(args.formula, vars)
             except IOError as e:
-                atk.log.fatal("formula file: {0} doesn't exist".format(args.formula))
+                log.fatal("formula file: {0} doesn't exist".format(args.formula))
 
             if len(vars["cdh"]) > 0:
                 temp = {}
@@ -34,7 +34,7 @@ def main():
                 atk.file.write_cdh_conf(temp)
 
             else:
-                atk.log.warning("No CDH configurations to save.")
+                log.warning("No CDH configurations to save.")
 
             if len(vars["atk"]) > 0:
                 f = open(atk.TAPROOT_CONFIG_FILE, "w+")
@@ -43,8 +43,9 @@ def main():
                     print("{0}={1}".format(key, vars["atk"][key]), file=f)
 
                 f.close()
+                log.info("Wrote ATK generated config: {0}".format(atk.TAPROOT_CONFIG_FILE))
             else:
-                atk.log.warning("No ATK configurations to save")
+                log.warning("No ATK configurations to save")
 
         else:
             atk.log.fatal("Couldn't connect to the CDH cluster")

@@ -1,7 +1,7 @@
 import unittest
-#import pytest
+
 from mock import MagicMock
-from atk_config import dict
+from cluster_config import dict
 
 class TestCli(unittest.TestCase):
     def test_nest_happy(self):
@@ -182,6 +182,7 @@ class TestCli(unittest.TestCase):
 
         assert conflicts[0][0] == "four" and conflicts[0][1] == "five" and conflicts[0][2] == "six"
         assert conflicts[1][0] == "seven"
+
 
 
 

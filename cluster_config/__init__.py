@@ -1,9 +1,9 @@
 import logging
 import sys
-from atk_config import file
-from atk_config import dict
-from atk_config import log
-from atk_config import cli
+from cluster_config import file
+from cluster_config import dict
+from cluster_config import log
+from cluster_config import cli
 
 
 CONFIG_DIR = "conf"

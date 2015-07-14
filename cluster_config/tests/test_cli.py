@@ -1,7 +1,7 @@
 import unittest
 from mock import MagicMock
 import argparse
-from atk_config import cli
+from cluster_config import cli
 
 class TestCli(unittest.TestCase):
     def test_host(self):

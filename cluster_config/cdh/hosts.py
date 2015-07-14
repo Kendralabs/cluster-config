@@ -1,7 +1,6 @@
-from cm_api.api_client import ApiResource
-from cm_api.endpoints import hosts, roles, role_config_groups
-import atk_config as atk
-from pprint import pprint
+from cm_api.endpoints import hosts
+import cluster_config as atk
+
 
 
 class Hosts(object):

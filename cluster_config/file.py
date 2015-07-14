@@ -5,7 +5,7 @@ import json
 import sys
 import shutil
 from pyhocon import ConfigFactory
-import atk_config as atk
+import cluster_config as atk
 
 
 def copy_generated_conf():
@@ -32,17 +32,15 @@ def open_hocon(path):
         return None
 
 
-#def get_conf(type):
-#    atk.file.check_dir_exists("conf")
-#    return open_hocon("conf/{0}.{1}".format(type, atk.HOCON_EXT))
-
-
 def write_cdh_conf(dictionary):
     atk.file.write_json_conf(dictionary, atk.CDH_CONFIG_FILE)
+    atk.log.info("Wrote {0} json file".format(atk.CDH_CONFIG_FILE))
+
 
 def check_dir_exists(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
 
 def open_json_conf(path):
     conf = None
@@ -54,6 +52,7 @@ def open_json_conf(path):
     except IOError as e:
         print("Couldn't open json file: {0}".format(path))
     return conf
+
 
 def write_json_conf(json_dict, path):
     try:
