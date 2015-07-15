@@ -2,8 +2,13 @@ import unittest
 
 from mock import MagicMock
 from cluster_config import dict
+import cluster_config as cc
 
 class TestCli(unittest.TestCase):
+    dict1 = { "one": { "two": { "three" : 3}},
+              "four":{ "five": { "six" : 6 }}, "seven": 11}
+    dict2 = { "four": { "five": { "six" : 8}}, "seven": 7}
+
     def test_nest_happy(self):
         temp = {}
         key = "one.two.three"
@@ -183,6 +188,130 @@ class TestCli(unittest.TestCase):
         assert conflicts[0][0] == "four" and conflicts[0][1] == "five" and conflicts[0][2] == "six"
         assert conflicts[1][0] == "seven"
 
+    def test_resolve_conflicts_first(self):
+        dict.user_input = MagicMock()
+
+        resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "first")
+
+        assert resolved[0][1] == 11
+        assert resolved[1][1] == 6
+        assert dict.user_input.call_count == 0
+
+    def test_resolve_conflicts_second(self):
+        dict.user_input = MagicMock()
+
+        resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "second")
+
+        assert resolved[0][1] == 7
+        assert resolved[1][1] == 8
+        assert dict.user_input.call_count == 0
+
+    def test_resolve_conflicts_interactive_user_single(self):
+        dict.user_input = MagicMock(return_value=cc.SINGLE[0])
+
+        resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
+
+        assert resolved[0][1] == 11
+        assert resolved[1][1] == 6
+        assert dict.user_input.call_count == 2
+
+    def test_resolve_conflicts_interactive_generated_single(self):
+        dict.user_input = MagicMock(return_value=cc.SINGLE[1])
+
+        resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
+
+        assert resolved[0][1] == 7
+        assert resolved[1][1] == 8
+        assert dict.user_input.call_count == 2
+
+    def test_resolve_conflicts_interactive_user_persistent(self):
+        dict.user_input = MagicMock(return_value=cc.PERSISTANT[0])
+
+        resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
+
+        assert resolved[0][1] == 11
+        assert resolved[1][1] == 6
+        assert dict.user_input.call_count == 1
+
+    def test_resolve_conflicts_interactive_generated_persistent(self):
+        dict.user_input = MagicMock(return_value=cc.PERSISTANT[1])
+
+        resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
+
+        assert resolved[0][1] == 7
+        assert resolved[1][1] == 8
+        assert dict.user_input.call_count == 1
+
+    def test_resolve_conflicts_None(self):
+
+        resolved = dict.resolve_conflicts(None, None, None, 4)
+
+        assert len(resolved) == 0
 
 
+    def test_set_value_nested(self):
+        dict1 = { "one": { "two": { "three" : 3}},
+                  "four":{ "five": { "six" : 6 }}, "seven": 11}
 
+        dict.set_value(100, ["four","five", "six"], dict1)
+
+        assert dict1["four"]["five"]["six"] == 100
+
+    def test_set_value_top_level(self):
+        dict1 = { "one": { "two": { "three" : 3}},
+                  "four":{ "five": { "six" : 6 }}, "seven": 11}
+
+        dict.set_value("seven", ["seven"], dict1)
+
+        assert dict1["seven"] == "seven"
+
+
+    def test_set_value_none(self):
+
+        dict.set_value(None, None, None)
+
+        assert  True
+
+    def test_get_value(self):
+        dict1 = { "one": { "two": { "three" : 3}},
+                  "four":{ "five": { "six" : 6 }}, "seven": 11}
+
+        assert dict.get_value(["seven"], dict1) == 11
+
+        assert dict.get_value(["one","two","three"], dict1) == 3
+
+        assert dict.get_value(["four","five","six"], dict1) == 6
+
+    def test_set_resolved(self):
+        dict1 = { "one": { "two": { "three" : 3}},
+                  "four":{ "five": { "six" : 6 }}, "seven": 11}
+
+        dict.set_resolved([(["one","two","three"], "three"),
+                           (["seven"], "seven")], dict1)
+
+        assert dict1["one"]["two"]["three"] == "three"
+        assert dict1["seven"] == "seven"
+
+    def test_resolve_conflict_single_user(self):
+        dict.user_input = MagicMock(return_value=cc.SINGLE[0])
+
+        assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 6
+        assert dict.user_input.call_count == 1
+
+    def test_resolve_conflict_single_auto_generated(self):
+        dict.user_input = MagicMock(return_value=cc.SINGLE[1])
+
+        assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 8
+        assert dict.user_input.call_count == 1
+
+    def test_resolve_conflict_persistent_user(self):
+        dict.user_input = MagicMock(return_value=cc.PERSISTANT[0])
+
+        assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 6
+        assert dict.user_input.call_count == 1
+
+    def test_resolve_conflict_persistent_auto_generated(self):
+        dict.user_input = MagicMock(return_value=cc.PERSISTANT[1])
+
+        assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 8
+        assert dict.user_input.call_count == 1

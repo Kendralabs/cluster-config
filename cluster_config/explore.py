@@ -1,12 +1,11 @@
-from atk_config import cli
-from atk_config.cdh.cluster import Cluster
+from cluster_config import cli
+from cluster_config.cdh.cluster import Cluster
 import hashlib, re, time, argparse, os, time, sys, getpass
 from pprint import pprint
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
-cli.add_cdh_command_line_options(parser)
 
-args = parser.parse_args()
+args = cli.parse(parser)
 
 def main():
 
@@ -43,7 +42,7 @@ def main():
                         print("\tconfig key: {0}.{1}.{2}.{3}".format(service,role,config_group,cluster.cdh_services[service].
                                                                 roles[role].
                                                                 config_groups[config_group].
-                                                                configs[config].name))
+                                                                configs[config].key))
                         print("")
         sys.exit(0)
 
@@ -70,5 +69,5 @@ def main():
         print("\tconfig key: {0}.{1}.{2}.{3}".format(service_index,role_index,config_group_index,cluster.cdh_services[service_index].
                                                                 roles[role_index].
                                                                 config_groups[config_group_index].
-                                                                configs[config].name))
+                                                                configs[config].key))
         print("")

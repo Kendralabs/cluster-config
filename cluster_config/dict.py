@@ -123,15 +123,17 @@ def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
             conflict_keys.append(config_key + temp)
     return conflict_keys
 
+def user_input(msg):
+    return raw_input(msg)
 
 def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
     """
     resolve conflicts either by asking or going forward with defaults form command line
-    :param conflict: conflicting kye
+    :param conflict: conflicting key
     :param user_configs: value for first conflicting key
     :param auto_configs: value for second conflicting key
     :param keep: answer for subsequent request
-    :return: resolved value for key
+    :return: tuple(user input,resolved value for key)
     """
     print("\nKey merge conflict: {0}".format('.'.join(conflict)))
     user_value = get_value(conflict, user_configs)
@@ -145,7 +147,8 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
             print("Too many retries no valid entry.")
             sys.exit(1)
 
-        keep = raw_input("Would you like to keep the user value or the auto generated value?[[{0}|{1}][{2}|{3}]]: ".format(atk.SINGLE[0], atk.PERSISTANT[0], atk.SINGLE[1], atk.PERSISTANT[1])).strip()
+        keep = user_input("Would you like to keep the user value or the auto generated value?[[{0}|{1}][{2}|{3}]]: ".format(atk.SINGLE[0], atk.PERSISTANT[0], atk.SINGLE[1], atk.PERSISTANT[1])).strip()
+        print "your answer: ", keep
         if keep not in atk.SINGLE and keep not in atk.PERSISTANT:
             print("Not a valid answer please try again.")
             keep = None
@@ -161,10 +164,11 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
 def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference):
     """
     iterate through all the conflicts and save resolution
-    :param conflicts:
+    :param conflicts: list of list with the inner list being the key path
+        [[u'YARN', u'GATEWAY', u'GATEWAY_BASE', u'MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP'], ...]
     :param first_dictionary:
     :param second_dictionary:
-    :param conflict_resolution_preference:
+    :param conflict_resolution_preference: 3 possible values first, second , interactive
     :return:
     """
     resolved = []
@@ -175,29 +179,42 @@ def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_r
     else:
         keep = None
 
-    for conflict in conflicts:
-        keep, value = resolve_conflict(conflict, first_dictionary, second_dictionary, keep)
-        resolved.append((conflict, value))
+    if conflicts and first_dictionary and second_dictionary:
+        for conflict in conflicts:
+            keep, value = resolve_conflict(conflict, first_dictionary, second_dictionary, keep)
+            resolved.append((conflict, value))
 
     return resolved
 
 
-def set_value(value, config_keys, configs):
-    for key in config_keys:
-        if key in configs and _recurse_type_check(configs, key):
-            return set_value(value, config_keys[1:], configs[key])
-        elif key in configs:
-            configs[key] = value
+def set_value(value, config_keys, dictionary):
+    """
+    set the value for a given key in the dictionary
+    :param value: value to set
+    :param config_keys: list with the config key
+    :param dictionary:
+    """
+    if value and config_keys and dictionary:
+        for key in config_keys:
+            if key in dictionary and _recurse_type_check(dictionary, key):
+                return set_value(value, config_keys[1:], dictionary[key])
+            elif key in dictionary:
+                dictionary[key] = value
 
 
-
-def get_value(config_keys, configs):
+def get_value(config_keys, dictionary):
+    """
+    get the value inside the dictionary for the config_key
+    :param config_keys: config key path ["lvl1", "lvl2", "some_key"]
+    :param dictionary:
+    :return: the value of the key
+    """
     for key in config_keys:
         #if configs[key] and type(configs[key]) == dict:
-        if key in configs and _recurse_type_check(configs, key):
-            return get_value(config_keys[1:], configs[key])
-        elif configs[key]:
-            return configs[key]
+        if key in dictionary and _recurse_type_check(dictionary, key):
+            return get_value(config_keys[1:], dictionary[key])
+        elif dictionary[key]:
+            return dictionary[key]
 
 
 def set_resolved(resolved, dictionary):

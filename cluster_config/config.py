@@ -1,17 +1,17 @@
 import argparse
 from pprint import pprint
-import atk_config as atk
+import cluster_config as atk
+from cluster_config.cdh.cluster import Cluster
 
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
 parser.add_argument("--update-cdh", type=str, help="Should we set all the CDH configs keys in config.json?", default="no")
 parser.add_argument("--restart", type=str, help="Weather or not to restart CDH services after config changes", default="no")
-atk.cli.add_cdh_command_line_options(parser)
-args = parser.parse_args()
+args = atk.cli.parse(parser)
 
 def main():
     #get the cluster reference
-    cluster = atk.cdh.Cluster(args.host, args.port, args.username, args.password, args.cluster)
+    cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if cluster:
         #Read the generated configs

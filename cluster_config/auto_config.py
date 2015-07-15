@@ -4,15 +4,12 @@ import cluster_config as atk
 from cluster_config import log
 from cluster_config.cdh.cluster import Cluster
 
-
 parser = argparse.ArgumentParser(description="Auto generate various CDH configurations based on system resources")
 parser.add_argument("--formula", type=str, help="Auto generation formula file.")
-atk.cli.add_cdh_command_line_options(parser)
-args = parser.parse_args()
+args = atk.cli.parse(parser)
 
 
 def main():
-
 
     if args.formula:
         #get the cluster reference

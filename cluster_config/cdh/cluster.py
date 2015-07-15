@@ -43,8 +43,6 @@ class Cluster(object):
             setattr(self, temp.name, temp)
             self.cdh_services[temp.key] = temp
 
-
-
     def _get_cluster(self):
         #get all the clusters managed by cdh
         try:
@@ -60,8 +58,6 @@ class Cluster(object):
         elif len(self.clusters) == 1:
             log.info("cluster selected: {0}".format(self.clusters[0].name))
             self.cluster = self.clusters[0]
-
-
 
     def _select_cluster(self):
         if self.user_given_cluster_name:

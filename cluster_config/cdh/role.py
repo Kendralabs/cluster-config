@@ -1,6 +1,7 @@
 from cluster_config.cdh.config_group import Config_Group
 from cluster_config.cdh.hosts import Hosts
 from cm_api.endpoints import role_config_groups
+from cluster_config import log
 
 
 
@@ -66,9 +67,9 @@ class Role(object):
             if config_group in self.config_groups:
                 update = self.config_groups[config_group].set(configs[config_group])
                 updated[config_group] = update
-                atk.log.info("Updated {0} configuration/s.".format(len(update)))
+                log.info("Updated {0} configuration/s.".format(len(update)))
             else:
-                atk.log.warning("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
+                log.warning("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
 
 
 
