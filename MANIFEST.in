@@ -1,0 +1,5 @@
+include *.py
+include cluster-config-auto
+include cluster-config-explore
+include cluster-config
+include README.md

@@ -4,7 +4,6 @@ import sys
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 out = logging.StreamHandler(sys.stdout)
-out.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(levelname)s %(message)s')
 out.setFormatter(formatter)
 logger.addHandler(out)

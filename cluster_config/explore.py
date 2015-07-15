@@ -7,9 +7,11 @@ parser = argparse.ArgumentParser(description="Process cl arguments to avoid prom
 
 args = cli.parse(parser)
 
+cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
+
 def main():
 
-    cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
+
 
     def pick(parentService, childService, parentServiceName, serviceList):
         print("Available {0} types on {1}: '{2}'".format(childService, parentService,parentServiceName))
@@ -21,12 +23,13 @@ def main():
             list.append(service)
             count += 1
         service_index = input("Enter {0} Id : ".format(childService))
-        if service_index <= 0 or service_index > len(cluster.cdh_services):
-            raise Exception("Not a valid {0} Id".format(childService))
+        print service_index, len(serviceList)
+        if service_index <= 0 or service_index > len(serviceList):
+            run_again()
         service_index -= 1
         return list[service_index]
 
-    dump = raw_input("dump all configs[yes]: ").strip()
+    dump = raw_input("dump all configs[yes or no]: ").strip()
     if dump == "yes":
         for service in cluster.cdh_services:
             for role in cluster.cdh_services[service].roles:
@@ -44,7 +47,7 @@ def main():
                                                                 config_groups[config_group].
                                                                 configs[config].key))
                         print("")
-        sys.exit(0)
+        run_again()
 
     service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.cdh_services)
     print service_index
@@ -71,3 +74,10 @@ def main():
                                                                 config_groups[config_group_index].
                                                                 configs[config].key))
         print("")
+    run_again()
+
+def run_again():
+    if raw_input("Would you like to run the script again?[yes or no]: ").strip() == "yes":
+        main()
+    else:
+        sys.exit(0)
