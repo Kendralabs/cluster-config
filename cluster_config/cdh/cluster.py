@@ -18,11 +18,7 @@ class Cluster(object):
         #users cluster name from the command line
         self._user_cluster_name = None
 
-        if host is None or port is None or username is None or password is None:
-            log.fatal("No host, port, username or password given")
-
-        #initialize cloudera manager connection
-        self.cdh_resource_root = ApiResource(host, server_port=port, username=username, password=password)
+        self._get_api_resource(host, port, username, password)
         #save the cluster name, might need if we have more than one cluster in cloudera manager
         self.user_cluster_name = cluster
 
@@ -31,6 +27,29 @@ class Cluster(object):
 
         #get cluster services
         self._get_services()
+
+    def _get_api_resource(self, host, port, username, password):
+        if host is None or host is "":
+            log.fatal("host init parameter can't be None or empty")
+        if port is None or port is "":
+            log.fatal("port init parameter can't be None or empty")
+        if username is None or username is "":
+            log.fatal("username init parameter can't be None or empty")
+        if password is None or password is "":
+            log.fatal("password init parameter can't be None or empty")
+
+        #initialize cloudera manager connection
+        log.debug("Connection to cluster {0}:{1} with user {2}:{3}".format(host,port,username, password))
+        self.cdh_resource_root = ApiResource(host, server_port=port, username=username, password=password)
+
+    def _get_all_clusters(self):
+        #get all the clusters managed by cdh
+        clusters = None
+        try:
+            clusters = self.cdh_resource_root.get_all_clusters()
+        except URLError:
+            log.fatal("couldn't connect to cluster management node.")
+        return clusters
 
     def _get_services(self):
         self.cdh_services = {}
@@ -41,11 +60,7 @@ class Cluster(object):
             self.cdh_services[temp.key] = temp
 
     def _get_cluster(self):
-        #get all the clusters managed by cdh
-        try:
-            self.clusters = self.cdh_resource_root.get_all_clusters()
-        except URLError:
-            log.fatal("couldn't connect to cluster management node.")
+        self.clusters = self._get_all_clusters()
 
         #if we have more than one cluster we need to pick witch one to configure against
         if len(self.clusters) > 1:
@@ -55,6 +70,8 @@ class Cluster(object):
         elif len(self.clusters) == 1:
             log.info("cluster selected: {0}".format(self.clusters[0].name))
             self.cluster = self.clusters[0]
+        elif len(self.clusters) <= 0:
+            log.fatal("No clusters to configure")
 
     def _select_cluster(self):
         if self.user_given_cluster_name:

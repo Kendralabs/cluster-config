@@ -23,6 +23,7 @@ def debug(msg):
 #fatal message, can't continue
 def fatal(msg):
     logger.log(logging.FATAL, msg)
+    sys.ext(1)
 
 #any error that is recoverable like trying to save config for a non existent server, role, etc...
 def error(msg):
