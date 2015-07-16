@@ -53,7 +53,7 @@ def open_json_conf(path):
         conf = json.loads(configJsonOpen.read())
         configJsonOpen.close()
     except IOError as e:
-        log.fatal("Couldn't open json file: {0}".format(path))
+        log.error("Couldn't open json file: {0}".format(path))
     return conf
 
 

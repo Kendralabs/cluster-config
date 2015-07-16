@@ -4,11 +4,11 @@ try:
     from setuptools import setup
     extra = dict(entry_points={
             #'paste.app_factory': ['main=pypiserver:paste_app_factory'],
-            'console_scripts': ['cluster-config=cluster_config.config:main', 'cluster-config-auto=cluster_config.auto_config:main','cluster-config-explore=cluster_config.explore:main' ]
+            'console_scripts': ['cluster-config=cluster_config.config:main', 'cluster-generate=cluster_config.auto_config:main','cluster-explore=cluster_config.explore:main' ]
             })
 except ImportError:
     from distutils.core import setup
-    extra = dict(scripts=["cluster-config","cluster-config-auto","cluster-config-explore"])
+    extra = dict(scripts=["cluster-config","cluster-generate","cluster-explore"])
 
 
 

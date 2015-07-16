@@ -41,7 +41,7 @@ def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_prefere
     """
     if first_dictionary is None or second_dictionary is None:
         return None
-    print "merge 44"
+
     conflicts = find_dict_conflicts(first_dictionary, second_dictionary)
 
     resolved = resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference)
@@ -107,16 +107,13 @@ def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
     for key in first_dictionary:
         #if the value of the key type is dict and the key exists in auto_generated recurse
         if _recurse_type_check(first_dictionary, key) and key in second_dictionary:
-            print "recurse: ", key
             config_key.append(key)
             for add_key in find_dict_conflicts(first_dictionary[key], second_dictionary[key], config_key):
                 conflict_keys.append(add_key)
             config_key.pop()
         elif key not in second_dictionary or second_dictionary.get(key) is None or second_dictionary.get(key) == first_dictionary.get(key):
-            print "continue: ", key
             continue
         else:
-            print "temp: key :", key
             temp = [key]
             conflict_keys.append(config_key + temp)
     return conflict_keys

@@ -1,14 +1,9 @@
 import getpass
+import os
 import logging
 import cluster_config.log as log
 from cluster_config.log import logger
-import cluster_config as cc
 
-"""
-add the cloudera connection arguments to the cli parser
-"""
-
-LOG = logging.INFO
 
 def add_cluster_connection_options(arg_parser):
     arg_parser.add_argument("--host", type=str, help="Cloudera Manager Host", required=True)
@@ -18,7 +13,7 @@ def add_cluster_connection_options(arg_parser):
 
     arg_parser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is managed by "
                                                 "Cloudera Manager.", default="cluster")
-    arg_parser.add_argument("--cdh-json-path", type=str, help="Directory where we can save/load the auto generated cdh configurations({0}). Defaults to working directory".format(cc.CDH_CONFIG))
+    arg_parser.add_argument("--path", type=str, help="Directory where we can save/load configurations files. Defaults to working directory {0}".format(os.getcwd()))
     arg_parser.add_argument("--log", type=str, help="Log level [INFO|DEBUG|WARNING|FATAL|ERROR]", default="INFO")
 
     return arg_parser
@@ -30,7 +25,8 @@ def parse(argparse):
 
     set_logging(args.log)
 
-    args.password = get_cluster_password()
+    if not args.password:
+        args.password = get_cluster_password()
 
     return args
 

@@ -8,7 +8,7 @@ from cluster_config.cdh.cluster import Cluster
 
 parser = argparse.ArgumentParser(description="Auto generate various CDH configurations based on system resources")
 parser.add_argument("--formula", type=str, help="Auto generation formula file.", required=True)
-parser.add_argument("--atk-conf-path", type=str, help="Directory for the atk.conf file. Defaults to working directory")
+#parser.add_argument("--atk-conf-path", type=str, help="Directory for the atk.conf file. Defaults to working directory")
 args = atk.cli.parse(parser)
 
 
@@ -28,7 +28,7 @@ def main():
 
             if len(vars["cdh"]) > 0:
                 temp = {}
-                path = file.file_path(atk.CDH_CONFIG, args.cdh_json_path)
+                path = file.file_path(atk.CDH_CONFIG, args.path)
                 for key in vars["cdh"]:
                     key_split = key.split(".")
                     atk.dict.nest(temp, key_split, vars["cdh"][key])
@@ -38,7 +38,7 @@ def main():
                 log.warning("No CDH configurations to save.")
 
             if len(vars["atk"]) > 0:
-                path = file.file_path(atk.ATK_CONFIG, args.atk_conf_path)
+                path = file.file_path(atk.ATK_CONFIG, args.path)
                 f = open(path, "w+")
                 for key in vars["atk"]:
 
