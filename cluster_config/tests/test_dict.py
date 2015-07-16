@@ -95,7 +95,7 @@ class TestCli(unittest.TestCase):
 
         check = { "list": [], "dict": {}}
 
-        assert dict._recurse_type_check(check, "list") == True
+        assert dict._recurse_type_check(check, "list") == False
         assert dict._recurse_type_check(check, "dict") == True
 
     def test_recurse_type_check_negative(self):
@@ -113,7 +113,7 @@ class TestCli(unittest.TestCase):
         #with self.assertRaises(TypeError):
         merged = dict._merge_dicts(dict1, dict2)
 
-        assert merged["four"]["five"]["six"] is None
+        assert merged["four"]["five"]["six"] == dict1["four"]["five"]["six"]
 
     def test_merge_dicts_no_conflicts(self):
         dict1 = { "one": { "two": { "three" : 3}},

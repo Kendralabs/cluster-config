@@ -6,7 +6,10 @@ import sys
 import shutil
 from pyhocon import ConfigFactory
 import cluster_config as atk
+from cluster_config import log
 
+def file_path(file_name, path):
+    return path.rstrip('\/') + "/{0}".format(file_name) if path else os.getcwd() + "/{0}".format(file_name)
 
 def copy_generated_conf():
     shutil.copyfile(atk.TAPROOT_CONFIG_FILE,atk.TAPROOT_USER_CONFIG_FILE)
@@ -50,7 +53,7 @@ def open_json_conf(path):
         conf = json.loads(configJsonOpen.read())
         configJsonOpen.close()
     except IOError as e:
-        print("Couldn't open json file: {0}".format(path))
+        log.fatal("Couldn't open json file: {0}".format(path))
     return conf
 
 
@@ -60,6 +63,5 @@ def write_json_conf(json_dict, path):
         configJsonOpen.write(unicode(json.dumps(json_dict, indent=True, sort_keys=True)))
         configJsonOpen.close()
     except IOError as e:
-        print("couldn't write {0}".format(path))
-        sys.exit(1)
+        log.fatal("couldn't write {0}".format(path))
 

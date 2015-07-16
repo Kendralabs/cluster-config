@@ -41,7 +41,7 @@ def merge_dicts(first_dictionary, second_dictionary, conflict_resolution_prefere
     """
     if first_dictionary is None or second_dictionary is None:
         return None
-
+    print "merge 44"
     conflicts = find_dict_conflicts(first_dictionary, second_dictionary)
 
     resolved = resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference)
@@ -60,10 +60,9 @@ def _recurse_type_check(dictionary, key):
     :param key: the key we are checking
     :return:
     """
-    if dictionary and key:
-        return type(dictionary[key]) is dict or type(dictionary[key]) is list
-    else:
-        return False
+
+    return isinstance(dictionary[key], dict) if dictionary and key else False
+
 
 
 def _merge_dicts(first_dictionary, second_dictionary):
@@ -75,20 +74,19 @@ def _merge_dicts(first_dictionary, second_dictionary):
     :param second_dictionary: second dictionary to merge
     :return:
     """
-    if type(first_dictionary) and type(second_dictionary) is not dict:
-        return None
-
     temp = {}
-    temp = first_dictionary.copy()
+    if isinstance(first_dictionary, dict) and isinstance(second_dictionary,dict):
 
-    for key in second_dictionary:
+        temp = first_dictionary.copy()
 
-        if _recurse_type_check(second_dictionary, key) and key in first_dictionary:
+        for key in second_dictionary:
 
-            temp[key] = _merge_dicts(first_dictionary[key], second_dictionary[key])
-        elif key not in first_dictionary:
+            if _recurse_type_check(second_dictionary, key) and key in first_dictionary:
 
-            temp[key] = second_dictionary[key]
+                temp[key] = _merge_dicts(first_dictionary[key], second_dictionary[key])
+            elif key not in first_dictionary:
+
+                temp[key] = second_dictionary[key]
 
     return temp
 
@@ -100,7 +98,7 @@ def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
 
     :param first_dictionary:
     :param second_dictionary:
-    :param config_key: list of of our current nested key [ lvl0, lvl1, lvl3, ...]
+    :param config_key: list of of our current nested key [ [lvl0, lvl1, lvl3], ...]
     :return:
     """
 
