@@ -44,6 +44,6 @@ RETRY = 5
 
 CONFLICT_RESOLUTION = ["interactive", "first", "second"]
 
-
+MAX_POLL = 300
 
 

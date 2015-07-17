@@ -39,7 +39,7 @@ def main():
         #if update cdh is "yes" then we iterate and update all the specified keys
         if args.update_cdh == "yes":
             #iterate through services, set cdh configs and possibly restart services
-            cluster.update_configs(configs, False if args.restart is "no" else True)
+            cluster.update_configs(configs, False if args.restart == "no" else True)
 
     else:
         log.fatal("Couldn't connect to the CDH cluster")

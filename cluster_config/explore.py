@@ -56,7 +56,8 @@ def main():
     print config_group_index
 
 
-    print ""
+    print("")
+
     for config in cluster.services[service_index].roles[role_index].config_groups[config_group_index].configs:
         print_details(config, service_index, role_index, config_group_index)
 

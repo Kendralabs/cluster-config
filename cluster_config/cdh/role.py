@@ -72,6 +72,20 @@ class Role(object):
                 log.warning("Config group: \"{0}\" doesn't exist for role: \"{1}\"".format(config_group, self.name))
 
 
+    def get_role_names(self):
+        """
+        Get all the role names. this is used when deploying configurations after updates. The role names are very long and
+        look like this 'spark-SPARK_WORKER-207e4bfb96a401eb77c8a78f55810d31'. Used by the Cloudera api to know where the
+        config is going to get deployed
+
+        :param roles: list of roles from a service. example SPARK_WORKER, SPARK_MASTER
+        :return: only the service names. will list of something like this 'spark-SPARK_WORKER-207e4bfb96a401eb77c8a78f'
+        """
+        temp = []
+        for role in self.cdh_roles:
+            if self.cdh_roles[role] and self.cdh_roles[role].hostRef:
+                temp.append(role)
+        return temp
 
     @property
     def type(self):

@@ -5,6 +5,7 @@ from cluster_config.cdh.role import Role
 import cluster_config.log as log
 
 
+
 class Service(object):
     def __init__(self, cdh_resource_root, cdh_cluster, cdh_service):
         #save are cloudera manager resource root reference
@@ -57,8 +58,24 @@ class Service(object):
         self.poll_commands("Restart")
         self.deployConfig()
 
+    def _get_role_names(self):
+        """
+        Get all the role names. this is used when deploying configurations after updates. The role names are very long and
+        look like this 'spark-SPARK_WORKER-207e4bfb96a401eb77c8a78f55810d31'. Used by the Cloudera api to know where the
+        config is going to get deployed
+
+        :param roles: list of roles from a service. example SPARK_WORKER, SPARK_MASTER
+        :return: only the service names. will list of something like this 'spark-SPARK_WORKER-207e4bfb96a401eb77c8a78f'
+        """
+        temp = []
+        for role in self.roles:
+            for name in self.roles[role].get_role_names():
+                temp.append(name)
+        return temp
+
     def deployConfig(self):
-        self.service.deploy_client_config(*self.roleNames)
+        print("Deploying configuration for all {0} roles".format(self.service.type))
+        self.service.deploy_client_config(*self._get_role_names())
         self.poll_commands("deployClientConfig")
 
     def poll_commands(self, command_name):
@@ -88,10 +105,11 @@ class Service(object):
 
                 self.roles[role].set(configs[role])
 
-                if restart:
-                    self.restart()
             else:
                 log.warning("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, self.name))
+
+        if restart:
+                self.restart()
 
     def get(self,role,configGroup=None,configs=None):
 
@@ -120,6 +138,14 @@ class Service(object):
     @cdh_cluster.setter
     def cdh_cluster(self, cdh_cluster):
         self._cdh_cluster = cdh_cluster
+
+    @property
+    def service(self):
+        return self._cdh_service
+
+    @service.setter
+    def service(self, cdh_service):
+        self._cdh_service = cdh_service
 
     @property
     def cdh_service(self):
