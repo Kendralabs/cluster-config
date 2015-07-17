@@ -1,6 +1,4 @@
 from cm_api.endpoints import hosts
-import cluster_config as atk
-
 
 
 class Hosts(object):

@@ -4,7 +4,6 @@ from cluster_config.cdh.service import Service
 from cluster_config import log
 
 
-
 class Cluster(object):
 
     def __init__(self, host, port, username, password, cluster=None):

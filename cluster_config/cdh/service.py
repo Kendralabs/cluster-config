@@ -5,7 +5,6 @@ from cluster_config.cdh.role import Role
 import cluster_config.log as log
 
 
-
 class Service(object):
     def __init__(self, cdh_resource_root, cdh_cluster, cdh_service):
         #save are cloudera manager resource root reference

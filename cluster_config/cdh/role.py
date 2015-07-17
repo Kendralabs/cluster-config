@@ -4,7 +4,6 @@ from cm_api.endpoints import role_config_groups
 from cluster_config import log
 
 
-
 class Role(object):
     def __init__(self, cdh_resource_root, cdh_cluster, cdh_service, cdh_role, cdh_role_type=None, cdh_role_name=None, active=True):
         #save are cloudera manager resource root reference
@@ -47,7 +46,6 @@ class Role(object):
                 config_group = Config_Group(self.cdh_service, group)
                 setattr(self, config_group.name, config_group)
                 self.config_groups[config_group.key] = config_group
-#                self.config_groups[config_group.key] = config_group
 
 
     def add(self, cdh_role):

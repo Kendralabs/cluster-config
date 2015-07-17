@@ -1,7 +1,6 @@
 import re
 from cluster_config.cdh.config import Config
 import cluster_config.log as log
-from pprint import pprint
 
 
 class Config_Group(object):
