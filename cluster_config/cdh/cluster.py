@@ -100,7 +100,10 @@ class Cluster(object):
             log.fatal("No clusters to configure")
 
     def _select_cluster(self):
-
+        """
+        Select a cluster either by trying to match self.user_cluster_name to the cluster name or display name or by
+        prompting the user to select a cluster.
+        """
         if self.user_cluster_name:
             print("Trying to find cluster: '{0}'.".format(self.user_cluster_name))
 

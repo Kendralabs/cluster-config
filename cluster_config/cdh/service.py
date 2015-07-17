@@ -1,4 +1,4 @@
-from cm_api.endpoints import hosts, roles, role_config_groups
+from cm_api.endpoints import role_config_groups
 import time
 import sys
 from cluster_config.cdh.role import Role
@@ -25,6 +25,12 @@ class Service(object):
     def _get_cdh_roles(self):
         return self.cdh_service.get_all_roles()
 
+    def _get_all_role_config_groups(self):
+        return role_config_groups.get_all_role_config_groups(self.cdh_resource_root, self.cdh_service.name, self.cdh_cluster.name)
+
+    def _role(self, role, role_type, role_name, active=True):
+        return Role(self.cdh_resource_root, self.cdh_cluster, self.cdh_service, role, role_type, role_name, active)
+
     def _get_roles(self):
 
         #get all roles assigned to hosts
@@ -32,13 +38,14 @@ class Service(object):
             if hasattr(self, role.type.lower()):
                 getattr(self, role.type.lower()).add(role)
             else:
-                temp = Role(self.cdh_resource_root, self.cdh_cluster, self.cdh_service, role, role.type, role.name)
+                temp = self._role(role, role.type, role.name)
                 setattr(self, temp.name, temp)
                 self.roles[temp.key] = temp
 
         #get all roles that have no assigned hosts
-        for config_group in role_config_groups.get_all_role_config_groups(self.cdh_resource_root, self.cdh_service.name, self.cdh_cluster.name):
-            temp = Role(self.cdh_resource_root, self.cdh_cluster,  self.cdh_service, None, config_group.roleType, config_group.roleType, False)
+        for config_group in self._get_all_role_config_groups():
+            temp = self._role(None, config_group.roleType, config_group.roleType, False)
+            #temp = Role(self.cdh_resource_root, self.cdh_cluster,  self.cdh_service, None, config_group.roleType, config_group.roleType, False)
             if hasattr(self, temp.name) is False:
                 setattr(self, temp.name, temp)
                 self.roles[temp.key] = temp
