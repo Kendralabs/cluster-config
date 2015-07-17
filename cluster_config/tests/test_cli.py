@@ -1,6 +1,7 @@
 import unittest
 import logging
 from mock import MagicMock
+import mock as mock
 import argparse
 from cluster_config import cli
 from cluster_config import log
@@ -62,28 +63,34 @@ class TestCli(unittest.TestCase):
         parser = argparse.ArgumentParser(description="sample parser")
         cli.add_cluster_connection_options(parser)
 
-        assert len(parser._actions) == 7
+        assert len(parser._actions) == 8
 
 
     def test_parse(self):
-        parser = argparse.ArgumentParser(description="sample parser")
-        parser.parse_args = MagicMock(return_value= type('obj', (object,), {'log' : "DEBUG"}))
+        with mock.patch("cluster_config.cli.get_cluster_password") as password:
+            password.return_value = MagicMock()
 
-        cli.get_cluster_password = MagicMock()
-        parser.log = "DEBUG"
+            parser = argparse.ArgumentParser(description="sample parser")
+            parser.parse_args = MagicMock(return_value= type('obj', (object,), {'log' : "DEBUG", "password": "123"}))
 
-        args = cli.parse(parser)
+            parser.log = "DEBUG"
 
-        assert log.logger.level == logging.DEBUG
+            args = cli.parse(parser)
+
+            assert log.logger.level == logging.DEBUG
 
     def test_parse_invalid_log_level(self):
-        parser = argparse.ArgumentParser(description="sample parser")
-        parser.parse_args = MagicMock(return_value= type('obj', (object,), {'log' : "123"}))
-        log.error = MagicMock()
-        cli.get_cluster_password = MagicMock()
-        parser.log = "DEBUG"
+        with mock.patch("cluster_config.log.error") as log,\
+                mock.patch("cluster_config.cli.get_cluster_password") as password:
+            log.return_value = MagicMock()
+            password.return_value = MagicMock()
 
-        args = cli.parse(parser)
+            parser = argparse.ArgumentParser(description="sample parser")
+            parser.parse_args = MagicMock(return_value= type('obj', (object,), {'log' : "123", "password": "123"}))
 
-        assert log.error.call_count == 1
-        assert log.error.assert_call("Invalid log level: {0}".format("123"))
+            parser.log = "DEBUG"
+
+            args = cli.parse(parser)
+
+            assert log.call_count == 1
+            log.assert_called_with("Invalid log level: 123")

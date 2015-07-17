@@ -1,9 +1,8 @@
 from cm_api.api_client import ApiResource
-from cm_api.endpoints import hosts, roles, role_config_groups
 from urllib2 import URLError
 from cluster_config.cdh.service import Service
 from cluster_config import log
-from pprint import pprint
+
 
 
 class Cluster(object):
@@ -26,9 +25,16 @@ class Cluster(object):
         self._get_cluster()
 
         #get cluster services
-        self._get_services()
+        self._set_services()
 
     def _get_api_resource(self, host, port, username, password):
+        """
+        Instantiate the cm_api resource, verify the host,port,username and password is not empty or None
+        :param host:
+        :param port:
+        :param username:
+        :param password:
+        """
         if host is None or host is "":
             log.fatal("host init parameter can't be None or empty")
         if port is None or port is "":
@@ -42,8 +48,11 @@ class Cluster(object):
         log.debug("Connection to cluster {0}:{1} with user {2}:{3}".format(host,port,username, password))
         self.cdh_resource_root = ApiResource(host, server_port=port, username=username, password=password)
 
-    def _get_all_clusters(self):
-        #get all the clusters managed by cdh
+    def _cdh_get_clusters(self):
+        """
+        retrieve all the clusters managed by cdh
+        :return: list of cluster objects
+        """
         clusters = None
         try:
             clusters = self.cdh_resource_root.get_all_clusters()
@@ -51,16 +60,33 @@ class Cluster(object):
             log.fatal("couldn't connect to cluster management node.")
         return clusters
 
-    def _get_services(self):
+    def _cdh_get_services(self):
+        return self.cluster.get_all_services()
+
+    def _service(self, service):
+        return Service(self.cdh_resource_root, self.cluster, service)
+
+    def _set_services(self):
+        """
+        Get all the cluster services
+        The service is wrapped in cluster_config.cdh.Service class which is assigned to an attribute and appended to a list.
+        services will be acccesible with
+        self.yarn or self.cdh_services["YARN"]
+        """
         self.cdh_services = {}
 
-        for service in self.cluster.get_all_services():
-            temp = Service(self.cdh_resource_root, self.cluster, service)
+        for service in self._cdh_get_services():
+            temp = self._service(service)
             setattr(self, temp.name, temp)
             self.cdh_services[temp.key] = temp
 
     def _get_cluster(self):
-        self.clusters = self._get_all_clusters()
+        """
+        Try to select a cluster if we have more than one cluster we need to ask the user. If we have 0 through fatal.
+        if we have exactly one make it the default selection
+
+        """
+        self.clusters = self._cdh_get_clusters()
 
         #if we have more than one cluster we need to pick witch one to configure against
         if len(self.clusters) > 1:
@@ -74,26 +100,32 @@ class Cluster(object):
             log.fatal("No clusters to configure")
 
     def _select_cluster(self):
-        if self.user_given_cluster_name:
-            print("Trying to find cluster: '{0}'.".format(self.user_given_cluster_name))
+
+        if self.user_cluster_name:
+            print("Trying to find cluster: '{0}'.".format(self.user_cluster_name))
+
             for c in self.clusters:
-                if c.displayName == self.user_given_cluster_name or c.name == self.user_given_cluster_name:
+                if c.displayName == self.user_cluster_name or c.name == self.user_cluster_name:
                     self.cluster = c
+
             if self.cluster is None:
-                log.fatal("Couldn't find cluster: '{0}'".format(self.user_given_cluster_name))
+                log.fatal("Couldn't find cluster: '{0}'".format(self.user_cluster_name))
 
         else:
             print("Please choose a cluster.")
+
             count = 0
             for c in self.clusters:
                 print("Id {0}: Cluster Name: {1:20} Version: {2}".format((count+1), c.name, c.version))
                 count += 1
-            cluster_index = input("Enter the clusters Id : ") - 1
-            if cluster_index <= 0 or cluster_index > (count-1):
-                log.fatal("Invalid cluster id selected.")
 
-            print ("You picked cluster {0}: Cluster Name: {1:20} Version: {2}".format(cluster_index, self.clusters[cluster_index].name, self.clusters[cluster_index].version))
-            self.cluster = self.clusters[cluster_index]
+            cluster_index = input("Enter the clusters Id : ")
+            if cluster_index <= 0 or cluster_index > count:
+                log.fatal("Invalid cluster id selected: {0}.".format(cluster_index))
+            else:
+                cluster_index -= 1
+                print ("You picked cluster {0}: Cluster Name: {1:20} Version: {2}".format(cluster_index, self.clusters[cluster_index].name, self.clusters[cluster_index].version))
+                self.cluster = self.clusters[cluster_index]
 
     def update_configs(self, configs, restart=False):
         for service in configs:
@@ -113,12 +145,20 @@ class Cluster(object):
         self._cdh_resource_root = cdh_resource_root
 
     @property
-    def cdh_cluster(self):
+    def cluster(self):
         return self._cdh_cluster
 
-    @cdh_cluster.setter
-    def cdh_cluster(self, cluster):
+    @cluster.setter
+    def cluster(self, cluster):
         self._cdh_cluster = cluster
+
+    @property
+    def services(self):
+        return self._cdh_services
+
+    @services.setter
+    def services(self, services):
+        self._cdh_services = services
 
     @property
     def cdh_services(self):

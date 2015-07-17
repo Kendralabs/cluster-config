@@ -37,43 +37,43 @@ def main():
         dump = raw_input("dump all configs[yes or no]: ").strip()
 
     if dump == "yes" or args.dump == "yes":
-        for service in cluster.cdh_services:
-            for role in cluster.cdh_services[service].roles:
-                for config_group in cluster.cdh_services[service].roles[role].config_groups:
-                    for config in cluster.cdh_services[service].roles[role].config_groups[config_group].configs:
+        for service in cluster.services:
+            for role in cluster.services[service].roles:
+                for config_group in cluster.services[service].roles[role].config_groups:
+                    for config in cluster.services[service].roles[role].config_groups[config_group].configs:
                         print_details(config, service, role, config_group)
         run_again()
 
-    service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.cdh_services)
+    service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.services)
     print service_index
 
-    pprint(cluster.cdh_services[service_index].roles)
-    role_index = pick("service", "role", service_index, cluster.cdh_services[service_index].roles)
+    pprint(cluster.services[service_index].roles)
+    role_index = pick("service", "role", service_index, cluster.services[service_index].roles)
     print role_index
 
     config_group_index = pick("role", "config group", role_index,
-                             cluster.cdh_services[service_index].roles[role_index].config_groups)
+                             cluster.services[service_index].roles[role_index].config_groups)
     print config_group_index
 
 
     print ""
-    for config in cluster.cdh_services[service_index].roles[role_index].config_groups[config_group_index].configs:
+    for config in cluster.services[service_index].roles[role_index].config_groups[config_group_index].configs:
         print_details(config, service_index, role_index, config_group_index)
 
     run_again()
 
 def print_details(config, service_index, role_index, config_group_index):
     print("- config name: {0} config description: {1}".format(config,
-                                                            cluster.cdh_services[service_index].
+                                                            cluster.services[service_index].
                                                             roles[role_index].
                                                             config_groups[config_group_index].
                                                             configs[config].
                                                             cdh_config.description))
-    print("- config key: {0}.{1}.{2}.{3}".format(service_index,role_index,config_group_index,cluster.cdh_services[service_index].
+    print("- config key: {0}.{1}.{2}.{3}".format(service_index,role_index,config_group_index,cluster.services[service_index].
                                                             roles[role_index].
                                                             config_groups[config_group_index].
                                                             configs[config].key))
-    print("- config value: {0}".format(cluster.cdh_services[service_index].
+    print("- config value: {0}".format(cluster.services[service_index].
                                                             roles[role_index].
                                                             config_groups[config_group_index].
                                                             configs[config].value))

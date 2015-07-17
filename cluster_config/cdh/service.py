@@ -1,12 +1,8 @@
-from cm_api.api_client import ApiResource
 from cm_api.endpoints import hosts, roles, role_config_groups
-from urllib2 import URLError
 import time
 import sys
-import re
 from cluster_config.cdh.role import Role
 import cluster_config.log as log
-from pprint import pprint
 
 
 class Service(object):
@@ -24,12 +20,15 @@ class Service(object):
         self.cdh_cluster = cdh_cluster
         self.cdh_service = cdh_service
 
-        self.__get_roles()
+        self._get_roles()
 
-    def __get_roles(self):
+    def _get_cdh_roles(self):
+        return self.cdh_service.get_all_roles()
+
+    def _get_roles(self):
 
         #get all roles assigned to hosts
-        for role in self.cdh_service.get_all_roles():
+        for role in self._get_cdh_roles():
             if hasattr(self, role.type.lower()):
                 getattr(self, role.type.lower()).add(role)
             else:
