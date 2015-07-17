@@ -98,7 +98,7 @@ CONTAINERS_ACCROSS_CLUSTER = \
         cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"]
         / (
             (
-                cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] + 3 *
+                cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] + 2 *
                 max(
                     atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"],
                     atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"],
