@@ -11,12 +11,16 @@ def add_cluster_connection_options(arg_parser):
     arg_parser.add_argument("--username", type=str, help="Cloudera Manager User Name", default="admin")
     arg_parser.add_argument("--password", type=str, help="Cloudera Manager Password")
 
-    arg_parser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is managed by "
-                                                "Cloudera Manager.", default="cluster")
-    arg_parser.add_argument("--path", type=str, help="Directory where we can save/load configurations files. Defaults to working directory {0}".format(os.getcwd()))
-    arg_parser.add_argument("--log", type=str, help="Log level [INFO|DEBUG|WARNING|FATAL|ERROR]", default="INFO")
+    arg_parser.add_argument("--cluster", type=str, help="Cloudera Manager Cluster Name if more than one cluster is "
+                                                        "managed by Cloudera Manager.", default="cluster")
+    arg_parser.add_argument("--path", type=str,
+                            help="Directory where we can save/load configurations files. "
+                                 "Defaults to working directory {0}".format(os.getcwd()))
+    arg_parser.add_argument("--log", type=str, help="Log level [INFO|DEBUG|WARNING|FATAL|ERROR]", default="INFO",
+                            choices=["INFO", "DEBUG", "WARNING", "FATAL", "ERROR"])
 
     return arg_parser
+
 
 def parse(argparse):
     add_cluster_connection_options(argparse)
@@ -30,6 +34,7 @@ def parse(argparse):
 
     return args
 
+
 def set_logging(log_lvl):
     if log_lvl:
         numeric_level = getattr(logging, log_lvl.upper(), None)
@@ -38,5 +43,8 @@ def set_logging(log_lvl):
         else:
             logger.setLevel(numeric_level)
 
+
 def get_cluster_password():
     return getpass.getpass(prompt="What is the password to the cluster? ")
+
+

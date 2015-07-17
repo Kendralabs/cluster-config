@@ -1,6 +1,6 @@
 import sys
-import cluster_config as atk
-from pprint import pprint
+import cluster_config as cc
+
 
 def nest(nested, keys, value):
     """
@@ -58,7 +58,7 @@ def _recurse_type_check(dictionary, key):
     Checks of the dictionary key is a list or another dictionary
     :param dictionary: The dictionary that has the key
     :param key: the key we are checking
-    :return:
+    :return: Boolean
     """
 
     return isinstance(dictionary[key], dict) if dictionary and key else False
@@ -68,11 +68,18 @@ def _recurse_type_check(dictionary, key):
 def _merge_dicts(first_dictionary, second_dictionary):
     """
     merge two nested dictionaries. Non dictionary types will be ignored. Conflicting keys are ignored.
-    We want a merged dictionary with all the same keys. Conflicting dictionary values will be delt with later.
+    We want a merged dictionary with all the same keys. Conflicting dictionary values will be dealt with later.
+
+    given
+    dict1 = { "frog" : 1 }
+    dict2 = { "frog" : 2, "toad" : 2 }
+
+    return
+    temp = { "frog" : 2, "toad" : 2 }
 
     :param first_dictionary: first dictionary to merge
     :param second_dictionary: second dictionary to merge
-    :return:
+    :return: merged dictionary
     """
     temp = {}
     if isinstance(first_dictionary, dict) and isinstance(second_dictionary,dict):
@@ -96,6 +103,13 @@ def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
     find key conflicts between two dictionaries.
     A key is not considered conflicting if it's the same value in both dictionaries
 
+     given
+    dict1 = { "frog" : 1, "kermit" : 1}
+    dict2 = { "frog" : 2, "kermit" : 2, "toad" : 2 }
+
+    return
+    temp = [ ["frog"], ["kermit"] ]
+
     :param first_dictionary:
     :param second_dictionary:
     :param config_key: list of of our current nested key [ [lvl0, lvl1, lvl3], ...]
@@ -118,12 +132,20 @@ def find_dict_conflicts(first_dictionary, second_dictionary, config_key=[]):
             conflict_keys.append(config_key + temp)
     return conflict_keys
 
+
 def user_input(msg):
+    """
+    prompts for user input. broken out to it's own function call to make it mockable
+    :param msg: string message for the user prompt
+    :return: user input
+    """
     return raw_input(msg)
+
 
 def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
     """
     resolve conflicts either by asking or going forward with defaults form command line
+
     :param conflict: conflicting key
     :param user_configs: value for first conflicting key
     :param auto_configs: value for second conflicting key
@@ -133,44 +155,52 @@ def resolve_conflict(conflict, user_configs, auto_configs, keep=None):
     print("\nKey merge conflict: {0}".format('.'.join(conflict)))
     user_value = get_value(conflict, user_configs)
 
-    print("[{0}]User value: {1}".format(atk.SINGLE[0], user_value))
+    print("[{0}]User value: {1}".format(cc.USER.single, user_value))
     auto_value = get_value(conflict, auto_configs)
-    print("[{0}]Auto gen value: {1}".format(atk.SINGLE[1], auto_value))
-    print("Optionally you can accept [{0}] all user values or [{1}] all auto generated values.".format(atk.PERSISTANT[0], atk.PERSISTANT[1]))
+    print("[{0}]Auto generated value: {1}".format(cc.GENENERATED.single, auto_value))
+    print("Optionally you can accept [{0}] all user values or [{1}] all auto generated values.".format(cc.USER.persistent, cc.GENENERATED.persistent))
     while keep is None:
-        if atk.RETRY <= 0:
+        if cc.RETRY <= 0:
             print("Too many retries no valid entry.")
             sys.exit(1)
 
-        keep = user_input("Would you like to keep the user value or the auto generated value?[[{0}|{1}][{2}|{3}]]: ".format(atk.SINGLE[0], atk.PERSISTANT[0], atk.SINGLE[1], atk.PERSISTANT[1])).strip()
+        keep = user_input("Would you like to keep the user value or the auto generated value?[[{0}|{1}][{2}|{3}]]: ".format(cc.USER.single, cc.USER.persistent, cc.GENENERATED.single, cc.GENENERATED.persistent)).strip()
         print "your answer: ", keep
-        if keep not in atk.SINGLE and keep not in atk.PERSISTANT:
+        if keep != cc.USER.single and keep != cc.USER.persistent and keep != cc.GENENERATED.single and keep != cc.GENENERATED.persistent:
             print("Not a valid answer please try again.")
             keep = None
-            atk.RETRY -= 1
+            cc.RETRY -= 1
 
-    if keep in atk.SINGLE:
-        return None, user_value if keep == atk.SINGLE[0] else auto_value
+    if keep == cc.USER.single or keep == cc.GENENERATED.single:
+        return None, user_value if keep == cc.USER.single else auto_value
     else:
-        atk.log.info("Auto resolving conflicts. Defaulting to {0} value".format("user" if keep == atk.PERSISTANT[0] else "auto generated"))
-        return keep, user_value if keep == atk.PERSISTANT[0] else auto_value
+        cc.log.info("Auto resolving conflicts. Defaulting to {0} value".format("user" if keep == cc.USER.persistent else "auto generated"))
+        return keep, user_value if keep == cc.USER.persistent else auto_value
 
 
 def resolve_conflicts(conflicts, first_dictionary, second_dictionary, conflict_resolution_preference):
     """
     iterate through all the conflicts and save resolution
+
+    given
+    dict1 = { "frog" : 1, "kermit" : 1}
+    dict2 = { "frog" : 2, "kermit" : 2, "toad" : 2 }
+
+    return - assuming you default to second dictionaries value
+    [(["frog"], 2), (["kermit"], 2)]
+
     :param conflicts: list of list with the inner list being the key path
         [[u'YARN', u'GATEWAY', u'GATEWAY_BASE', u'MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP'], ...]
     :param first_dictionary:
     :param second_dictionary:
     :param conflict_resolution_preference: 3 possible values first, second , interactive
-    :return:
+    :return: list of tuples with conflicting key and the resolved value
     """
     resolved = []
-    if conflict_resolution_preference is "first":
-        keep = atk.PERSISTANT[0]
-    elif conflict_resolution_preference is "second":
-        keep = atk.PERSISTANT[1]
+    if conflict_resolution_preference == "first":
+        keep = cc.USER.persistent
+    elif conflict_resolution_preference == "second":
+        keep = cc.GENENERATED.persistent
     else:
         keep = None
 
@@ -186,8 +216,8 @@ def set_value(value, config_keys, dictionary):
     """
     set the value for a given key in the dictionary
     :param value: value to set
-    :param config_keys: list with the config key
-    :param dictionary:
+    :param config_keys: list with the config key ["lvl1", "lvl2", ...]
+    :param dictionary: the dictionary to update
     """
     if value and config_keys and dictionary:
         for key in config_keys:
@@ -205,7 +235,6 @@ def get_value(config_keys, dictionary):
     :return: the value of the key
     """
     for key in config_keys:
-        #if configs[key] and type(configs[key]) == dict:
         if key in dictionary and _recurse_type_check(dictionary, key):
             return get_value(config_keys[1:], dictionary[key])
         elif dictionary[key]:
@@ -215,3 +244,5 @@ def get_value(config_keys, dictionary):
 def set_resolved(resolved, dictionary):
     for key, value in resolved:
         set_value(value, key, dictionary)
+
+

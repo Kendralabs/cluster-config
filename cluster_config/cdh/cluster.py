@@ -8,6 +8,7 @@ from cluster_config import log
 class Cluster(object):
 
     def __init__(self, host, port, username, password, cluster=None):
+
         #save are cloudera manager resource root reference
         self._cdh_resource_root = None
         #the selected cluster either by default because we only have one or the one that matches user_given_cluster_name

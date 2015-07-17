@@ -57,7 +57,8 @@ class TestCli(unittest.TestCase):
 
         cli.add_cluster_connection_options(parser)
 
-        parser.add_argument.assert_any_call("--log", type=str, help="Log level [INFO|DEBUG|WARNING|FATAL|ERROR]", default="INFO")
+        parser.add_argument.assert_any_call("--log", type=str, help="Log level [INFO|DEBUG|WARNING|FATAL|ERROR]", default="INFO",
+                            choices=["INFO", "DEBUG", "WARNING", "FATAL", "ERROR"])
 
     def test_for_only_default(self):
         parser = argparse.ArgumentParser(description="sample parser")

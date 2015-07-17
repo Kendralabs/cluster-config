@@ -34,15 +34,14 @@ setup(
 
     #
     license="LICENSE.txt",
-    description="cdh cluster configuration tool #BUILD_NUMBER#",
+    description="big data cluster configuration tool",
 
     long_description=open("README.md").read(),
 
     # Dependent packages (distributions)
     install_requires=[
         'argparse >= 1.3.0',
-        'pyhocon >= 0.3.4',
-        'cm-api >= 10.0.0'
+        'cm-api == 10.0.0'
     ],
     **extra
 )

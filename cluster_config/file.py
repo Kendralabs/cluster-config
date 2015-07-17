@@ -1,67 +1,46 @@
-from pprint import pprint
 import os
 import io
 import json
-import sys
-import shutil
-from pyhocon import ConfigFactory
-import cluster_config as atk
 from cluster_config import log
 
+
 def file_path(file_name, path):
+    """
+    get the entire file path for file_name
+    :param file_name: The base file name, my_file.ext| myfile
+    :param path: some default path
+    :return: full path with file name, path/file_name or working/directory/file_name
+    """
     return path.rstrip('\/') + "/{0}".format(file_name) if path else os.getcwd() + "/{0}".format(file_name)
-
-def copy_generated_conf():
-    shutil.copyfile(atk.TAPROOT_CONFIG_FILE,atk.TAPROOT_USER_CONFIG_FILE)
-
-
-def get_cdh_auto_config():
-    return open_json_conf(atk.CDH_CONFIG_FILE)
-
-
-def get_chd_user_config():
-    return open_json_conf(atk.CDH_USER_CONFIG_FILE)
-
-
-def get_atk_user_config():
-    return open_hocon(atk.TAPROOT_USER_CONFIG_FILE)
-
-
-def open_hocon(path):
-    try:
-        return ConfigFactory.parse_file(path)
-    except IOError as e:
-        atk.log.error("No hocon file found at: ".format(path))
-        return None
-
-
-def write_cdh_conf(dictionary):
-    atk.file.write_json_conf(dictionary, atk.CDH_CONFIG_FILE)
-    atk.log.info("Wrote {0} json file".format(atk.CDH_CONFIG_FILE))
-
-
-def check_dir_exists(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 
 def open_json_conf(path):
+    """
+    Open json files
+    :param path: the full file path including file name
+    :return: dictionary of the json file
+    """
     conf = None
-    atk.log.debug("open_json_conf: {0}".format(path))
+    log.debug("open_json_conf: {0}".format(path))
     try:
-        configJsonOpen = io.open(path, encoding="utf-8", mode="r")
-        conf = json.loads(configJsonOpen.read())
-        configJsonOpen.close()
-    except IOError as e:
+        config_json_open = io.open(path, encoding="utf-8", mode="r")
+        conf = json.loads(config_json_open.read())
+        config_json_open.close()
+    except IOError:
         log.error("Couldn't open json file: {0}".format(path))
     return conf
 
 
 def write_json_conf(json_dict, path):
+    """
+    save a dictionary as a json file
+    :param json_dict: some dictionary
+    :param path: full file path including file name
+    """
     try:
-        configJsonOpen = io.open(path, encoding="utf-8", mode="w")
-        configJsonOpen.write(unicode(json.dumps(json_dict, indent=True, sort_keys=True)))
-        configJsonOpen.close()
-    except IOError as e:
+        config_json_open = io.open(path, encoding="utf-8", mode="w")
+        config_json_open.write(unicode(json.dumps(json_dict, indent=True, sort_keys=True)))
+        config_json_open.close()
+    except IOError:
         log.fatal("couldn't write {0}".format(path))
 

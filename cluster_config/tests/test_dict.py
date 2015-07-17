@@ -207,7 +207,7 @@ class TestCli(unittest.TestCase):
         assert dict.user_input.call_count == 0
 
     def test_resolve_conflicts_interactive_user_single(self):
-        dict.user_input = MagicMock(return_value=cc.SINGLE[0])
+        dict.user_input = MagicMock(return_value=cc.USER.single)
 
         resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
 
@@ -216,7 +216,7 @@ class TestCli(unittest.TestCase):
         assert dict.user_input.call_count == 2
 
     def test_resolve_conflicts_interactive_generated_single(self):
-        dict.user_input = MagicMock(return_value=cc.SINGLE[1])
+        dict.user_input = MagicMock(return_value=cc.GENENERATED.single)
 
         resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
 
@@ -225,7 +225,7 @@ class TestCli(unittest.TestCase):
         assert dict.user_input.call_count == 2
 
     def test_resolve_conflicts_interactive_user_persistent(self):
-        dict.user_input = MagicMock(return_value=cc.PERSISTANT[0])
+        dict.user_input = MagicMock(return_value=cc.USER.persistent)
 
         resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
 
@@ -234,7 +234,7 @@ class TestCli(unittest.TestCase):
         assert dict.user_input.call_count == 1
 
     def test_resolve_conflicts_interactive_generated_persistent(self):
-        dict.user_input = MagicMock(return_value=cc.PERSISTANT[1])
+        dict.user_input = MagicMock(return_value=cc.GENENERATED.persistent)
 
         resolved = dict.resolve_conflicts([["seven"],["four","five","six"]], self.dict1, self.dict2, "interactive")
 
@@ -293,25 +293,25 @@ class TestCli(unittest.TestCase):
         assert dict1["seven"] == "seven"
 
     def test_resolve_conflict_single_user(self):
-        dict.user_input = MagicMock(return_value=cc.SINGLE[0])
+        dict.user_input = MagicMock(return_value=cc.USER.single)
 
         assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 6
         assert dict.user_input.call_count == 1
 
     def test_resolve_conflict_single_auto_generated(self):
-        dict.user_input = MagicMock(return_value=cc.SINGLE[1])
+        dict.user_input = MagicMock(return_value=cc.GENENERATED.persistent)
 
         assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 8
         assert dict.user_input.call_count == 1
 
     def test_resolve_conflict_persistent_user(self):
-        dict.user_input = MagicMock(return_value=cc.PERSISTANT[0])
+        dict.user_input = MagicMock(return_value=cc.USER.persistent)
 
         assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 6
         assert dict.user_input.call_count == 1
 
     def test_resolve_conflict_persistent_auto_generated(self):
-        dict.user_input = MagicMock(return_value=cc.PERSISTANT[1])
+        dict.user_input = MagicMock(return_value=cc.GENENERATED.persistent)
 
         assert dict.resolve_conflict(["four","five","six"], self.dict1, self.dict2, None)[1] == 8
         assert dict.user_input.call_count == 1

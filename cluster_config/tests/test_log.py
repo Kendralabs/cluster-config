@@ -41,3 +41,4 @@ class TestCli(unittest.TestCase):
         log.error("error")
 
         log.logger.log.assert_called_with(logging.ERROR, "error")
+

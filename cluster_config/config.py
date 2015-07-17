@@ -1,6 +1,4 @@
 import argparse
-from pprint import pprint
-import os.path
 
 import cluster_config as cc
 from cluster_config import log
@@ -9,10 +7,18 @@ from cluster_config.cdh.cluster import Cluster
 
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
-parser.add_argument("--update-cdh", type=str, help="Should we set all the CDH configs keys in config.json?", default="no")
-parser.add_argument("--restart", type=str, help="Weather or not to restart CDH services after config changes", default="no")
+parser.add_argument("--update-cdh", type=str,
+                    help="Should we update CDH with all configurations in {0}/{1}?".format(cc.CDH_CONFIG,cc.USER_CDH_CONFIG),
+                    default="no", choices=["no", "yes"])
+parser.add_argument("--restart", type=str, help="Should we restart CDH services after configuration changes",
+                    default="no", choices=["no", "yes"])
+parser.add_argument("--conflict-merge", type=str, help="When encountering merge conflicts between the generated "
+                                                       "configuration() and the user configuration() what value "
+                                                       "should we default to? The 'user', 'generated', or 'interactive'"
+                                                       "resolution", default="user", choices=cc.CONFLICT_RESOLUTION)
 
 args = cc.cli.parse(parser)
+
 
 def main():
     #get the cluster reference
@@ -31,7 +37,11 @@ def main():
 
         if user_configs:
             #merge config dictionaries and resolve conflicts
-            configs = cc.dict.merge_dicts(user_configs, cdh_configs)
+            log.info("conflict resolution: {0}".format(args.conflict_merge))
+            configs = cc.dict.merge_dicts(user_configs, cdh_configs, args.conflict_merge)
+            merged_config_path = file.file_path(cc.MERGED_CDH_CONFIG, args.path)
+            log.info("Writting merged CDH config file: {0}".format(merged_config_path))
+            file.write_json_conf(configs, merged_config_path)
         else:
             configs = cdh_configs
 
@@ -41,5 +51,7 @@ def main():
             #iterate through services, set cdh configs and possibly restart services
             cluster.update_configs(configs, False if args.restart == "no" else True)
 
+
     else:
         log.fatal("Couldn't connect to the CDH cluster")
+

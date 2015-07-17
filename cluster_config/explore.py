@@ -1,7 +1,6 @@
 from cluster_config import cli
 from cluster_config.cdh.cluster import Cluster
-import hashlib, re, time, os, time, sys, getpass
-from pprint import pprint
+import sys
 import argparse
 
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
@@ -47,7 +46,6 @@ def main():
     service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.services)
     print service_index
 
-    pprint(cluster.services[service_index].roles)
     role_index = pick("service", "role", service_index, cluster.services[service_index].roles)
     print role_index
 
@@ -88,3 +86,4 @@ def run_again():
             sys.exit(0)
     else:
         sys.exit(0)
+
