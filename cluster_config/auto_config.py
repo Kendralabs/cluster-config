@@ -21,7 +21,7 @@ def main():
 
     if args.formula:
         #get the cluster reference
-
+        log.info("using formula: {0}".format(args.formula))
         if cluster:
             #execute formula global variables
             vars = exec_formula(cluster, args.formula)
@@ -55,7 +55,7 @@ def save_cdh_configuration(vars):
             key_split = key.split(".")
             cc.dict.nest(temp, key_split, vars["cdh"][key])
         file.write_json_conf(temp, path)
-        log.info("Wrote CDH config file to: {0}".format(path))
+        log.info("Wrote CDH configuration file to: {0}".format(path))
     else:
         log.warning("No CDH configurations to save.")
 
@@ -69,6 +69,6 @@ def save_atk_configuration(vars):
             print("{0}={1}".format(key, vars["atk"][key]), file=f)
 
         f.close()
-        log.info("Wrote ATK generated config file to: {0}".format(path))
+        log.info("Wrote ATK generated configuration file to: {0}".format(path))
     else:
         log.warning("No ATK configurations to save")
