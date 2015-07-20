@@ -38,7 +38,7 @@ def main():
 
 def exec_formula(cluster, path):
     #execute formula global variables
-    vars = {"cluster": cluster, "cdh": {}, "atk": {}}
+    vars = {"cluster": cluster, "cdh": {}, "atk": {}, "log": log}
     try:
         execfile(path, vars)
     except IOError:

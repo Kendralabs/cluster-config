@@ -9,13 +9,13 @@ from cluster_config.cdh.cluster import Cluster
 parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
 parser.add_argument("--update-cdh", type=str,
                     help="Should we update CDH with all configurations in {0}/{1}?".format(cc.CDH_CONFIG,cc.USER_CDH_CONFIG),
-                    default="no", choices=["no", "yes"])
-parser.add_argument("--restart", type=str, help="Should we restart CDH services after configuration changes",
-                    default="no", choices=["no", "yes"])
+                    choices=["no", "yes"], required=True)
+parser.add_argument("--restart-cdh", type=str, help="Should we restart CDH services after configuration changes",
+                    choices=["no", "yes"], required=True)
 parser.add_argument("--conflict-merge", type=str, help="When encountering merge conflicts between the generated "
                                                        "configuration() and the user configuration() what value "
                                                        "should we default to? The 'user', 'generated', or 'interactive'"
-                                                       "resolution", default="user", choices=cc.CONFLICT_RESOLUTION)
+                                                       "resolution", default="first", choices=cc.CONFLICT_RESOLUTION)
 
 args = cc.cli.parse(parser)
 
@@ -49,7 +49,7 @@ def main():
         #if update cdh is "yes" then we iterate and update all the specified keys
         if args.update_cdh == "yes":
             #iterate through services, set cdh configs and possibly restart services
-            cluster.update_configs(configs, False if args.restart == "no" else True)
+            cluster.update_configs(configs, False if args.restart_cdh == "no" else True)
 
 
     else:

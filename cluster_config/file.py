@@ -27,7 +27,7 @@ def open_json_conf(path):
         conf = json.loads(config_json_open.read())
         config_json_open.close()
     except IOError:
-        log.error("Couldn't open json file: {0}".format(path))
+        log.warning("Couldn't open json file: {0}".format(path))
     return conf
 
 
