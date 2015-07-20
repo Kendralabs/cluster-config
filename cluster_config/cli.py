@@ -45,6 +45,6 @@ def set_logging(log_lvl):
 
 
 def get_cluster_password():
-    return getpass.getpass(prompt="What is the password to the cluster? ")
+    return getpass.getpass(prompt="What is the Cloudera manager password? ")
 
 

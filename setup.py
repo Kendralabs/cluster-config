@@ -4,7 +4,9 @@ try:
     from setuptools import setup
     extra = dict(entry_points={
             #'paste.app_factory': ['main=pypiserver:paste_app_factory'],
-            'console_scripts': ['cluster-config=cluster_config.config:main', 'cluster-generate=cluster_config.auto_config:main','cluster-explore=cluster_config.explore:main' ]
+            'console_scripts': ['cluster-config=cluster_config.config:main',
+                                'cluster-generate=cluster_config.auto_config:main',
+                                'cluster-explore=cluster_config.explore:main']
             })
 except ImportError:
     from distutils.core import setup

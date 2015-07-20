@@ -46,4 +46,4 @@ RETRY = 5
 CONFLICT_RESOLUTION = ["interactive", "first", "second"]
 
 
-
+DEFAULT_FORMULA = "formula.py"
