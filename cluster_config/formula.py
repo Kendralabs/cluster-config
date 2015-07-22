@@ -74,7 +74,8 @@ cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] = \
         min(
             (
                 (
-                cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] / NM_WORKER_CORES)
+                    cdh[
+                        "YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] / NM_WORKER_CORES)
                 / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
             ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"],
             MAX_JVM_MEMORY / MiB
@@ -109,13 +110,16 @@ CONTAINERS_ACCROSS_CLUSTER = \
     cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"] \
     / (
         (
-            cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] + 2 *
-            max(
-                atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] / MiB,
-                atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] / MiB,
-                cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
-            ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
-        ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+            cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] + (
+                2 *
+                max(
+                    atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] / MiB,
+                    atk[
+                        "intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] / MiB,
+                    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+                ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+            ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+        )
     ) * NUM_NM_WORKERS
 
 GIRAPH_WORKERS_ACCROSS_CLUSTER = CONTAINERS_ACCROSS_CLUSTER - 1
