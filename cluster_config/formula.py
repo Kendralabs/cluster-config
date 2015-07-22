@@ -28,11 +28,17 @@ MEM_FRACTION_FOR_HBASE = 0.20
 MEM_FRACTION_FOR_OTHER_SERVICES = 0.20
 MAPREDUCE_JOB_COUNTERS_MAX = 500
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.maxPermSize"] = 512 * MiB
+SPARK_DRIVER_MAXPERMSIZE = 512
+atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
+    "\"%dm\"" %(SPARK_DRIVER_MAXPERMSIZE)
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = 384 * MiB
+SPARK_YARN_DRIVER_MEMORYOVERHEAD = 384
+atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
+    "\"%d\"" %(SPARK_YARN_DRIVER_MEMORYOVERHEAD)
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = 384 * MiB
+SPARK_YARN_EXECUTOR_MEMORYOVERHEAD = 384
+atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = \
+    "\"%d\"" %(SPARK_YARN_EXECUTOR_MEMORYOVERHEAD)
 
 cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] = NM_WORKER_CORES
 
@@ -59,9 +65,9 @@ cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION
     (
         int(MEM_PER_NM / MiB -
             max(
-                atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.maxPermSize"] / MiB,
-                atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] / MiB,
-                atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] / MiB
+                SPARK_DRIVER_MAXPERMSIZE,
+                SPARK_YARN_DRIVER_MEMORYOVERHEAD,
+                SPARK_YARN_EXECUTOR_MEMORYOVERHEAD
             ) * 3
         ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
     ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
@@ -113,9 +119,8 @@ CONTAINERS_ACCROSS_CLUSTER = \
             cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] + (
                 2 *
                 max(
-                    atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] / MiB,
-                    atk[
-                        "intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] / MiB,
+                    SPARK_YARN_DRIVER_MEMORYOVERHEAD,
+                    SPARK_YARN_EXECUTOR_MEMORYOVERHEAD,
                     cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
                 ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
             ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
@@ -128,14 +133,14 @@ atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutor
     int((CONTAINERS_ACCROSS_CLUSTER - NUM_THREADS) / NUM_THREADS)
 
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.memory"] = \
-    cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] * MiB
+    "\"%dm\"" %(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
 
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.cores"] = \
     (cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] * NUM_NM_WORKERS - NUM_THREADS) \
     / (NUM_THREADS * atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"])
 
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.memory"] = \
-    cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] * MiB
+    "\"%dm\"" %(cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
 
 atk["intel.taproot.analytics.api.giraph.mapreduce.map.memory.mb"] = \
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
@@ -144,7 +149,7 @@ atk["intel.taproot.analytics.api.giraph.giraph.maxWorkers"] = \
     int((GIRAPH_WORKERS_ACCROSS_CLUSTER - NUM_THREADS - 1) / NUM_THREADS) - 1
 
 atk["intel.taproot.analytics.api.giraph.mapreduce.map.java.opts.max.heap"] = \
-    "-Xmx%sm" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] / MiB)
+    "\"-Xmx%sm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] / MiB)
 
 
 
