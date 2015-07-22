@@ -25,10 +25,10 @@ def main():
             list.append(service)
             count += 1
         service_index = input("Enter {0} Id : ".format(childService))
-        print service_index, len(serviceList)
         if service_index <= 0 or service_index > len(serviceList):
             run_again()
         service_index -= 1
+        print("Selected {0}".format(list[service_index]))
         return list[service_index]
 
     dump = "no"
@@ -44,14 +44,11 @@ def main():
         run_again()
 
     service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.services)
-    print service_index
 
     role_index = pick("service", "role", service_index, cluster.services[service_index].roles)
-    print role_index
 
     config_group_index = pick("role", "config group", role_index,
                              cluster.services[service_index].roles[role_index].config_groups)
-    print config_group_index
 
 
     print("")
@@ -62,17 +59,18 @@ def main():
     run_again()
 
 def print_details(config, service_index, role_index, config_group_index):
-    print("- config name: {0} config description: {1}".format(config,
-                                                            cluster.services[service_index].
+    print("config: ")
+    print("- name: {0}".format(config,))
+    print("- description: {0}".format(cluster.services[service_index].
                                                             roles[role_index].
                                                             config_groups[config_group_index].
                                                             configs[config].
                                                             cdh_config.description))
-    print("- config key: {0}.{1}.{2}.{3}".format(service_index,role_index,config_group_index,cluster.services[service_index].
+    print("- key: {0}.{1}.{2}.{3}".format(service_index,role_index,config_group_index,cluster.services[service_index].
                                                             roles[role_index].
                                                             config_groups[config_group_index].
                                                             configs[config].key))
-    print("- config value: {0}".format(cluster.services[service_index].
+    print("- value: {0}".format(cluster.services[service_index].
                                                             roles[role_index].
                                                             config_groups[config_group_index].
                                                             configs[config].value))

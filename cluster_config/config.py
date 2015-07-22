@@ -15,7 +15,7 @@ parser.add_argument("--restart-cdh", type=str, help="Should we restart CDH servi
 parser.add_argument("--conflict-merge", type=str, help="When encountering merge conflicts between the generated "
                                                        "configuration() and the user configuration() what value "
                                                        "should we default to? The 'user', 'generated', or 'interactive'"
-                                                       "resolution", default="first", choices=cc.CONFLICT_RESOLUTION)
+                                                       "resolution", default="user", choices=cc.CONFLICT_RESOLUTION)
 
 args = cc.cli.parse(parser)
 
@@ -38,7 +38,7 @@ def main():
         if user_configs:
             #merge config dictionaries and resolve conflicts
             log.info("conflict resolution: {0}".format(args.conflict_merge))
-            configs = cc.dict.merge_dicts(user_configs, cdh_configs, args.conflict_merge)
+            configs = cc.dict.merge_dicts(user_configs, cdh_configs, convert_conflict_merge(args.conflict_merge))
             merged_config_path = file.file_path(cc.MERGED_CDH_CONFIG, args.path)
             log.info("Writting merged CDH config file: {0}".format(merged_config_path))
             file.write_json_conf(configs, merged_config_path)
@@ -55,3 +55,16 @@ def main():
     else:
         log.fatal("Couldn't connect to the CDH cluster")
 
+
+def convert_conflict_merge(conflict_merge_preference):
+    """
+    convert between user, generated, interactive to first, second, interactive options
+    :param conflict_merge_preference: conflict merge pref from command line
+    :return: the conflict merge preference that dictionary merging will understand
+    """
+    if conflict_merge_preference == "user":
+        return "first"
+    elif conflict_merge_preference == "generated":
+        return "second"
+    elif conflict_merge_preference == "interactive":
+        return "interactive"

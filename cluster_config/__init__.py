@@ -43,7 +43,7 @@ GENENERATED = type('obj', (object,), {'single' : "auto", "persistent": "ag"})
 RETRY = 5
 
 #allowed dict merge conflict resolutions
-CONFLICT_RESOLUTION = ["interactive", "first", "second"]
+CONFLICT_RESOLUTION = ["interactive", "user", "generated"]
 
 
 DEFAULT_FORMULA = "formula.py"
