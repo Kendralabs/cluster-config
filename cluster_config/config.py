@@ -6,23 +6,32 @@ from cluster_config import file
 from cluster_config.cdh.cluster import Cluster
 
 
-parser = argparse.ArgumentParser(description="Process cl arguments to avoid prompts in automation")
-parser.add_argument("--update-cdh", type=str,
-                    help="Should we update CDH with all configurations in {0}/{1}?".format(cc.CDH_CONFIG,cc.USER_CDH_CONFIG),
+def cli(parser=None):
+    if parser is None:
+        parser = argparse.ArgumentParser(description="Update CDH with {0}/{1} configuration values.".
+                                         format(cc.CDH_CONFIG,cc.USER_CDH_CONFIG))
+
+    parser.add_argument("--update-cdh", type=str,
+                    help="Should we update CDH with all configurations in {0}/{1}?".
+                        format(cc.CDH_CONFIG,cc.USER_CDH_CONFIG),
                     choices=["no", "yes"], required=True)
-parser.add_argument("--restart-cdh", type=str, help="Should we restart CDH services after configuration changes",
+    parser.add_argument("--restart-cdh", type=str, help="Should we restart CDH services after configuration changes",
                     choices=["no", "yes"], required=True)
-parser.add_argument("--conflict-merge", type=str, help="When encountering merge conflicts between the generated "
+    parser.add_argument("--conflict-merge", type=str, help="When encountering merge conflicts between the generated "
                                                        "configuration() and the user configuration() what value "
                                                        "should we default to? The 'user', 'generated', or 'interactive'"
                                                        "resolution", default="user", choices=cc.CONFLICT_RESOLUTION)
 
-args = cc.cli.parse(parser)
+    return parser
 
 
 def main():
-    #get the cluster reference
-    cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
+    run(cc.cli.parse(cli()))
+
+
+def run(args, cluster=None):
+    if cluster is None:
+        cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if cluster:
         #Read the generated configs

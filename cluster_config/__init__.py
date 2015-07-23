@@ -9,6 +9,9 @@ HOCON_EXT = "conf"
 #json file extension
 JSON_EXT = "json"
 
+#yaml file extension
+YAML_EXT = "yaml"
+
 #user config file prefix
 USER_PREFIX = "user"
 
@@ -41,6 +44,9 @@ GENENERATED = type('obj', (object,), {'single' : "auto", "persistent": "ag"})
 
 #interactive max retry incase the user types in the wrong info
 RETRY = 5
+
+#fomula args file name
+FORMULA_ARGS = "formula-args.{0}".format(YAML_EXT)
 
 #allowed dict merge conflict resolutions
 CONFLICT_RESOLUTION = ["interactive", "user", "generated"]
