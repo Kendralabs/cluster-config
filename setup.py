@@ -6,7 +6,8 @@ try:
             #'paste.app_factory': ['main=pypiserver:paste_app_factory'],
             'console_scripts': ['cluster-config=cluster_config.config:main',
                                 'cluster-generate=cluster_config.auto_config:main',
-                                'cluster-explore=cluster_config.explore:main']
+                                'cluster-explore=cluster_config.explore:main',
+                                'cluster-push=cluster_config.push:main']
             })
 except ImportError:
     from distutils.core import setup

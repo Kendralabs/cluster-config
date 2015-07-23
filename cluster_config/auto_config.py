@@ -6,18 +6,22 @@ from cluster_config import log
 from cluster_config import file
 from cluster_config.cdh.cluster import Cluster
 
-parser = argparse.ArgumentParser(description="Auto generate various CDH configurations based on system resources")
 
-default_formula = file.file_path(cc.DEFAULT_FORMULA,os.path.split(__file__)[0])
+def cli(parser=None):
+    if parser is None:
+        parser = argparse.ArgumentParser(description="Auto generate various CDH configurations based on system resources")
 
-parser.add_argument("--formula", type=str, help="Auto generation formula file. Defaults to {0}".format(default_formula),
-                    default=default_formula)
+    default_formula = file.file_path(cc.DEFAULT_FORMULA,os.path.split(__file__)[0])
 
-args = cc.cli.parse(parser)
+    parser.add_argument("--formula", type=str, help="Auto generation formula file. Defaults to {0}".format(default_formula),
+                        default=default_formula)
+
+    return parser
 
 
-def main():
-    cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
+def main(args, cluster=None):
+    if cluster is None:
+        cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if args.formula:
         #get the cluster reference
@@ -26,9 +30,9 @@ def main():
             #execute formula global variables
             vars = exec_formula(cluster, args.formula)
 
-            save_cdh_configuration(vars)
+            save_cdh_configuration(vars, args)
 
-            save_atk_configuration(vars)
+            save_atk_configuration(vars, args)
 
         else:
             cc.log.fatal("Couldn't connect to the CDH cluster")
@@ -47,7 +51,7 @@ def exec_formula(cluster, path):
     return vars
 
 
-def save_cdh_configuration(vars):
+def save_cdh_configuration(vars, args):
     if len(vars["cdh"]) > 0:
         temp = {}
         path = file.file_path(cc.CDH_CONFIG, args.path)
@@ -60,7 +64,7 @@ def save_cdh_configuration(vars):
         log.warning("No CDH configurations to save.")
 
 
-def save_atk_configuration(vars):
+def save_atk_configuration(vars, args):
     if len(vars["atk"]) > 0:
         path = file.file_path(cc.ATK_CONFIG, args.path)
         f = open(path, "w+")
