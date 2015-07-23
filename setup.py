@@ -11,7 +11,7 @@ try:
             })
 except ImportError:
     from distutils.core import setup
-    extra = dict(scripts=["cluster-config","cluster-generate","cluster-explore"])
+    extra = dict(scripts=["cluster-config","cluster-generate","cluster-explore", "cluster-push"])
 
 
 
@@ -46,5 +46,5 @@ setup(
         'argparse >= 1.3.0',
         'cm-api == 10.0.0'
     ],
-    **extra
+    extra = dict(scripts=["cluster-config","cluster-generate","cluster-explore", "cluster-push"])
 )
