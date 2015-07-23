@@ -1,3 +1,6 @@
+from cluster_config import log
+import math
+
 # Simple MB, GB and TB to Bytes calculator
 KiB = 1024
 MiB = KiB * 1024
@@ -30,15 +33,15 @@ MAPREDUCE_JOB_COUNTERS_MAX = 500
 
 SPARK_DRIVER_MAXPERMSIZE = 512
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
-    "\"%dm\"" %(SPARK_DRIVER_MAXPERMSIZE)
+    "\"%dm\"" % (SPARK_DRIVER_MAXPERMSIZE)
 
 SPARK_YARN_DRIVER_MEMORYOVERHEAD = 384
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
-    "\"%d\"" %(SPARK_YARN_DRIVER_MEMORYOVERHEAD)
+    "\"%d\"" % (SPARK_YARN_DRIVER_MEMORYOVERHEAD)
 
 SPARK_YARN_EXECUTOR_MEMORYOVERHEAD = 384
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = \
-    "\"%d\"" %(SPARK_YARN_EXECUTOR_MEMORYOVERHEAD)
+    "\"%d\"" % (SPARK_YARN_EXECUTOR_MEMORYOVERHEAD)
 
 cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] = NM_WORKER_CORES
 
@@ -60,6 +63,10 @@ cdh["HBASE.REGIONSERVER.REGIONSERVER_BASE.HBASE_REGIONSERVER_JAVA_HEAPSIZE"] = \
     int(MEM_FOR_HBASE_REGION_SERVERS / OVER_COMMIT_FACTOR)
 
 cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"] = 512
+
+# The recommended value for this is less or equal 32GB
+MAPREDUCE_MAP_MINIMUM_MEMORY_MB = \
+    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"] * 2
 
 cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] = \
     (
@@ -85,7 +92,7 @@ cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] = \
                 / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
             ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"],
             MAX_JVM_MEMORY / MiB
-        ), 1024
+        ), MAPREDUCE_MAP_MINIMUM_MEMORY_MB
     )
 
 cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_MEMORY_MB"] = \
@@ -127,26 +134,29 @@ CONTAINERS_ACCROSS_CLUSTER = \
         )
     ) * NUM_NM_WORKERS
 
-GIRAPH_WORKERS_ACCROSS_CLUSTER = CONTAINERS_ACCROSS_CLUSTER - 1
+if NUM_THREADS > (CONTAINERS_ACCROSS_CLUSTER / 2):
+    log.fatal("Number of concurrent threads should be at most {0}"
+              .format((min(CONTAINERS_ACCROSS_CLUSTER, CONTAINERS_ACCROSS_CLUSTER) / 2))
+    )
 
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"] = \
     int((CONTAINERS_ACCROSS_CLUSTER - NUM_THREADS) / NUM_THREADS)
 
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.memory"] = \
-    "\"%dm\"" %(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
+    "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
 
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.cores"] = \
     (cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] * NUM_NM_WORKERS - NUM_THREADS) \
     / (NUM_THREADS * atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"])
 
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.memory"] = \
-    "\"%dm\"" %(cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
+    "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
 
 atk["intel.taproot.analytics.api.giraph.mapreduce.map.memory.mb"] = \
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
 
 atk["intel.taproot.analytics.api.giraph.giraph.maxWorkers"] = \
-    int((GIRAPH_WORKERS_ACCROSS_CLUSTER - NUM_THREADS - 1) / NUM_THREADS) - 1
+    atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"]
 
 atk["intel.taproot.analytics.api.giraph.mapreduce.map.java.opts.max.heap"] = \
     "\"-Xmx%sm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] / MiB)
