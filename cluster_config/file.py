@@ -1,7 +1,9 @@
 import os
 import io
 import json
+import yaml
 from cluster_config import log
+import pprint
 
 
 def file_path(file_name, path):
@@ -43,4 +45,16 @@ def write_json_conf(json_dict, path):
         config_json_open.close()
     except IOError:
         log.fatal("couldn't write {0}".format(path))
+
+
+def open_yaml_conf(path):
+    args = None
+    log.debug("open yaml file: {0}". format(path))
+    try:
+        config_yaml_open = io.open(path, encoding="utf-8", mode="r")
+        args = yaml.load(config_yaml_open)
+        config_yaml_open.close()
+    except IOError:
+        log.warning("Couldn't open yaml file: {0}".format(path))
+    return args
 

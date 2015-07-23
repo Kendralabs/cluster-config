@@ -1,12 +1,7 @@
 from __future__ import print_function
-import os
 import argparse
-import cluster_config as cc
-from cluster_config import log
-from cluster_config import file
 from cluster_config.cdh.cluster import Cluster
 from cluster_config import auto_config, config
-
 
 
 def cli(parser=None):
@@ -19,9 +14,18 @@ def cli(parser=None):
     return parser
 
 
-def main(args, cluster=None):
+def main():
+    from cluster_config.cdh.cluster import Cluster
+    from cluster_config import push
+    from cluster_config.cli import parse
+    args = parse(push.cli())
+    cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
+    push.run(args, cluster)
+
+
+def run(args, cluster=None):
     if cluster is None:
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
-    auto_config.main(args, cluster)
-    config.main(args, cluster)
+    auto_config.run(args, cluster)
+    config.run(args, cluster)

@@ -1,17 +1,17 @@
 import os
 
-#try:
-#    from setuptools import setup
-#    extra = dict(entry_points={
-# #           #'paste.app_factory': ['main=pypiserver:paste_app_factory'],
-#            'console_scripts': ['cluster-config=cluster_config.config:main',
-#                                'cluster-generate=cluster_config.auto_config:main',
-# #                               'cluster-explore=cluster_config.explore:main',
-#                                'cluster-push=cluster_config.push:main']
-#            })
-#except ImportError:
-from distutils.core import setup
-extra = dict(scripts=["cluster-config","cluster-generate","cluster-explore", "cluster-push"])
+try:
+    from setuptools import setup
+    extra = dict(entry_points={
+           #'paste.app_factory': ['main=pypiserver:paste_app_factory'],
+            'console_scripts': ['cluster-config=cluster_config.config:main',
+                                'cluster-generate=cluster_config.auto_config:main',
+                               'cluster-explore=cluster_config.explore:main',
+                                'cluster-push=cluster_config.push:main']
+            })
+except ImportError:
+    from distutils.core import setup
+    extra = dict(scripts=["cluster-config","cluster-generate","cluster-explore", "cluster-push"])
 
 
 
@@ -44,7 +44,8 @@ setup(
     # Dependent packages (distributions)
     install_requires=[
         'argparse >= 1.3.0',
-        'cm-api == 10.0.0'
+        'cm-api == 10.0.0',
+        'pyyaml == 3.11'
     ],
     **extra
 )

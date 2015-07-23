@@ -5,6 +5,7 @@ import cluster_config as cc
 from cluster_config import log
 from cluster_config import file
 from cluster_config.cdh.cluster import Cluster
+import sys
 
 
 def cli(parser=None):
@@ -13,38 +14,49 @@ def cli(parser=None):
 
     default_formula = file.file_path(cc.DEFAULT_FORMULA,os.path.split(__file__)[0])
 
-    parser.add_argument("--formula", type=str, help="Auto generation formula file. Defaults to {0}".format(default_formula),
+    parser.add_argument("--formula", type=str,
+                        help="Auto generation formula file. Defaults to {0}".format(default_formula),
+                        default=default_formula)
+
+    parser.add_argument("--formula-args", type=str,
+                        help="Auto generation formula arguments to possibly override global configurations.".
+                        format(default_formula),
                         default=default_formula)
 
     return parser
 
 
-def main(args, cluster=None):
+def main():
+    run(cc.cli.parse(cli()))
+
+
+def run(args, cluster=None):
     if cluster is None:
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if args.formula:
-        #get the cluster reference
-        log.info("using formula: {0}".format(args.formula))
-        if cluster:
-            #execute formula global variables
-            vars = exec_formula(cluster, args.formula)
+        #execute formula global variables
+        vars = exec_formula(cluster, args)
 
-            save_cdh_configuration(vars, args)
+        save_cdh_configuration(vars, args)
 
-            save_atk_configuration(vars, args)
+        save_atk_configuration(vars, args)
 
-        else:
-            cc.log.fatal("Couldn't connect to the CDH cluster")
     else:
         cc.log.fatal("Formula file must be specified")
 
 
-def exec_formula(cluster, path):
+def exec_formula(cluster, args):
+    log.info("using formula: {0}".format(args.formula))
+
+    user_formula_args_path = file.file_path(cc.FORMULA_ARGS, args.path)
+    log.info("Reading CDH config file: {0}".format(user_formula_args_path))
+    user_formula_args = file.open_yaml_conf(user_formula_args_path)
+
     #execute formula global variables
-    vars = {"cluster": cluster, "cdh": {}, "atk": {}, "log": log}
+    vars = {"cluster": cluster, "cdh": {}, "atk": {}, "log": log, "args": user_formula_args}
     try:
-        execfile(path, vars)
+        execfile(args.formula, vars)
     except IOError:
         log.fatal("formula file: {0} doesn't exist".format(args.formula))
 

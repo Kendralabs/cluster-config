@@ -1,4 +1,5 @@
 # Simple MB, GB and TB to Bytes calculator
+log.info(args['NUM_THREADS'])
 KiB = 1024
 MiB = KiB * 1024
 GiB = MiB * 1024
