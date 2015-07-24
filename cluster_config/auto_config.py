@@ -19,7 +19,7 @@ def cli(parser=None):
                         default=default_formula)
 
     parser.add_argument("--formula-args", type=str,
-                        help="Auto generation formula arguments to possibly override global configurations.".
+                        help="formula arguments to possibly override constants.".
                         format(default_formula),
                         default=default_formula)
 
