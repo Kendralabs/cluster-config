@@ -1,3 +1,5 @@
+import time
+import sys
 from cm_api.api_client import ApiResource
 from urllib2 import URLError
 from cluster_config.cdh.service import Service
@@ -137,7 +139,38 @@ class Cluster(object):
                 self.cdh_services[service].set(configs[service], restart)
             else:
                 log.error("Service: \"{0}\" doesn't exist in cluster: \"{1}\"".format(service, self.user_cluster_name))
+        if restart:
+            self.restart()
 
+    def restart(self):
+        """
+        Restart the cluster and deploy configurations but only services with stale configurations.
+        """
+        log.info("Restarting cluster : \"{0}\"".format(self.cluster.name))
+        self.cluster.restart(True, True)
+        self.poll_commands("Restart")
+
+    def poll_commands(self, command_name):
+        """
+        poll the currently running commands to find out when the config deployment and restart have finished
+
+        :param service: service to pool commands for
+        :param command_name: the command we will be looking for, ie 'Restart'
+        """
+        while True:
+            time.sleep(2)
+            log.info("Waiting for {0}".format(command_name)),
+            sys.stdout.flush()
+            commands = self.cluster.get_commands(view="full")
+            if commands:
+                for c in commands:
+                    if c.name == command_name:
+                        #active = c.active
+                        break
+            else:
+                break
+        print "\n"
+        log.info("Done with {0}.".format(command_name))
 
     @property
     def cdh_resource_root(self):

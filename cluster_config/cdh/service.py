@@ -52,6 +52,10 @@ class Service(object):
 
 
     def restart(self):
+        """
+        Restart the service and deploy configurations
+
+        """
         print("Restarting service : \"{0}\"".format(self.service.type))
         self.service.restart()
         self.poll_commands("Restart")
@@ -107,8 +111,8 @@ class Service(object):
             else:
                 log.warning("Role: \"{0}\" doesn't exist for service: \"{1}\"".format(role, self.name))
 
-        if restart:
-                self.restart()
+        #if restart:
+        #        self.restart()
 
     def get(self,role,configGroup=None,configs=None):
 
