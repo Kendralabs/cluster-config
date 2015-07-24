@@ -48,6 +48,9 @@ RETRY = 5
 #fomula args file name
 FORMULA_ARGS = "formula-args.{0}".format(YAML_EXT)
 
+#all cdh configs
+ALL_CLUSTER_CONFIGS = "ALL-CLUSTER-CONFIGURATIONS.{0}".format(JSON_EXT)
+
 #allowed dict merge conflict resolutions
 CONFLICT_RESOLUTION = ["interactive", "user", "generated"]
 

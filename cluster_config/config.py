@@ -34,8 +34,8 @@ def run(args, cluster=None):
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if cluster:
-        #Read the generated configs
 
+        #Read the generated configs
         cdh_config_path = file.file_path(cc.CDH_CONFIG, args.path)
         log.info("Reading CDH config file: {0}".format(cdh_config_path))
         cdh_configs = file.open_json_conf(cdh_config_path)
@@ -44,6 +44,7 @@ def run(args, cluster=None):
         log.info("Reading user CDH config file: {0}".format(user_cdh_config_path))
         user_configs = file.open_json_conf(user_cdh_config_path)
 
+        merged_config_path = None
         if user_configs:
             #merge config dictionaries and resolve conflicts
             log.info("conflict resolution: {0}".format(args.conflict_merge))
@@ -60,6 +61,7 @@ def run(args, cluster=None):
             #iterate through services, set cdh configs and possibly restart services
             cluster.update_configs(configs, False if args.restart_cdh == "no" else True)
 
+        file.snapshots(cluster, args.host, "push", args.path, cdh_config_path, user_cdh_config_path, merged_config_path)
 
     else:
         log.fatal("Couldn't connect to the CDH cluster")

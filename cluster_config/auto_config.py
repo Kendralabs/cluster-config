@@ -5,7 +5,6 @@ import cluster_config as cc
 from cluster_config import log
 from cluster_config import file
 from cluster_config.cdh.cluster import Cluster
-import sys
 
 
 def cli(parser=None):
@@ -42,6 +41,7 @@ def run(args, cluster=None):
 
         save_atk_configuration(vars, args)
 
+        file.snapshots(cluster, args.host, "generate", args.path, args.formula, args.formula_args)
     else:
         cc.log.fatal("Formula file must be specified")
 
