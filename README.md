@@ -1,4 +1,4 @@
-atk_config
+cluster_config
 ==========
 he cluster configuration tool allows easy updating and optimization of any CDH cluster from the command line. With the use of optimization formulas you can have an optimized CDH cluster in a matter of seconds.
 
