@@ -38,14 +38,17 @@ def open_json_conf(path):
 
 def snapshots(cluster, host, action, path, *args):
     log.info("Creating file snapshots")
-    prefix = "{0}-{1}".format(host, time.strftime("%Y-%m-%d %H:%M:%S"))
+    prefix = "{0}-{1}".format(host, time.strftime("%Y_%m_%d_%H_%M_%S"))
     snapshot_folder = file_path(prefix, path)
     log.info("Creating snapshot folder:{0}".format(snapshot_folder))
     check_dir_exists(snapshot_folder)
     for arg in args:
         if arg:
             log.info("Snapshotting: {0} ".format(arg))
-            shutil.copy(arg, "{0}/{1}-{2}-{3}".format(snapshot_folder, prefix, action, os.path.basename(arg)))
+            try:
+                shutil.copy(arg, "{0}/{1}-{2}-{3}".format(snapshot_folder, prefix, action, os.path.basename(arg)))
+            except IOError:
+                log.warning("Couldn't create snapshot for: {0} ".format(arg))
 
     cdh_json_path = file_path(cc.ALL_CLUSTER_CONFIGS, path)
     write_json_conf(cdh.json(cluster), cdh_json_path)
