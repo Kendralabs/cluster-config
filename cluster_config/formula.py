@@ -184,12 +184,12 @@ atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.cores"]
 atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.memory"] = \
     "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
 
-atk["intel.taproot.analytics.api.giraph.mapreduce.map.memory.mb"] = \
+atk["intel.taproot.analytics.engine.giraph.mapreduce.map.memory.mb"] = \
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
 
-atk["intel.taproot.analytics.api.giraph.giraph.maxWorkers"] = \
+atk["intel.taproot.analytics.engine.giraph.giraph.maxWorkers"] = \
     atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"]
 
-atk["intel.taproot.analytics.api.giraph.mapreduce.map.java.opts.max.heap"] = \
+atk["intel.taproot.analytics.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
     "\"-Xmx%sm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] / MiB)
 
