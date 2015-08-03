@@ -66,15 +66,15 @@ else:
 if ((MAX_JVM_MEMORY / MiB) < MAPREDUCE_MAP_MINIMUM_MEMORY_MB):
     log.fatal("Container larger than {0}MB are not supported".format(MAX_JVM_MEMORY))
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
+atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
     "\"%dm\"" % (SPARK_DRIVER_MAXPERMSIZE)
 
 SPARK_YARN_DRIVER_MEMORYOVERHEAD = 384
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
+atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
     "\"%d\"" % (SPARK_YARN_DRIVER_MEMORYOVERHEAD)
 
 SPARK_YARN_EXECUTOR_MEMORYOVERHEAD = 384
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = \
+atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = \
     "\"%d\"" % (SPARK_YARN_EXECUTOR_MEMORYOVERHEAD)
 
 cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] = NM_WORKER_CORES
@@ -171,25 +171,25 @@ if NUM_THREADS > (CONTAINERS_ACCROSS_CLUSTER / 2):
 
 log.info("{0} could be as large as {1} for multi-tenacty".format("NUM_THREADS", (CONTAINERS_ACCROSS_CLUSTER / 2)))
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"] = \
+atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"] = \
     int((CONTAINERS_ACCROSS_CLUSTER - NUM_THREADS) / NUM_THREADS)
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.memory"] = \
+atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.memory"] = \
     "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.executor.cores"] = \
+atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.cores"] = \
     (cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] * NUM_NM_WORKERS - NUM_THREADS) \
-    / (NUM_THREADS * atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"])
+    / (NUM_THREADS * atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"])
 
-atk["intel.taproot.analytics.engine.spark.conf.properties.spark.driver.memory"] = \
+atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.memory"] = \
     "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
 
-atk["intel.taproot.analytics.engine.giraph.mapreduce.map.memory.mb"] = \
+atk["trustedanalytics.atk.engine.giraph.mapreduce.map.memory.mb"] = \
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
 
-atk["intel.taproot.analytics.engine.giraph.giraph.maxWorkers"] = \
-    atk["intel.taproot.analytics.engine.spark.conf.properties.spark.yarn.numExecutors"]
+atk["trustedanalytics.atk.engine.giraph.giraph.maxWorkers"] = \
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"]
 
-atk["intel.taproot.analytics.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
+atk["trustedanalytics.atk.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
     "\"-Xmx%sm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] / MiB)
 
