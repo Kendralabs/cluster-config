@@ -1,10 +1,13 @@
 from __future__ import print_function
 import os
+import sys
 import argparse
 import cluster_config as cc
 from cluster_config import log
 from cluster_config import file
+from cluster_config.const import Const
 from cluster_config.cdh.cluster import Cluster
+from pprint import pprint
 
 
 def cli(parser=None):
@@ -35,6 +38,11 @@ def run(args, cluster=None):
 
     if args.formula:
         #execute formula global variables
+        #__import__("cluster_config.formula")
+        #pprint(sys.modules)
+        #sys.exit(1)
+        #mymodule = sys.modules[module_name]
+
         vars = exec_formula(cluster, args)
 
         save_cdh_configuration(vars, args)
@@ -55,11 +63,13 @@ def exec_formula(cluster, args):
 
     #execute formula global variables
     vars = {"cluster": cluster, "cdh": {}, "atk": {}, "log": log, "args": user_formula_args}
+    local = {}
     try:
-        execfile(args.formula, vars)
+        execfile(args.formula, vars, local)
     except IOError:
         log.fatal("formula file: {0} doesn't exist".format(args.formula))
-
+    const = Const()
+    local["constans"](cluster, const, log)
     return vars
 
 

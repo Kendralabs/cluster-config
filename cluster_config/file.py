@@ -25,14 +25,8 @@ def open_json_conf(path):
     :param path: the full file path including file name
     :return: dictionary of the json file
     """
-    conf = None
     log.debug("open_json_conf: {0}".format(path))
-    try:
-        config_json_open = io.open(path, encoding="utf-8", mode="r")
-        conf = json.loads(config_json_open.read())
-        config_json_open.close()
-    except IOError:
-        log.warning("Couldn't open json file: {0}".format(path))
+    conf = json.loads(open_file(path))
     return conf
 
 
@@ -85,3 +79,14 @@ def open_yaml_conf(path):
         log.warning("Couldn't open yaml file: {0}".format(path))
     return args
 
+
+def open_file(path):
+    file_string = None
+    log.debug("opening file: {0}". format(path))
+    try:
+        file_pointer = io.open(path, encoding="utf-8", mode="r")
+        file_string = file_pointer.read()
+        file_pointer.close()
+    except IOError:
+        log.warning("Couldn't open yaml file: {0}".format(path))
+    return file_string
