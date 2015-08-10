@@ -1,17 +1,16 @@
 # from cluster_config import log
 
-def num_threads(x):
-    if x and x > 0:
-        return x
-    else:
-        log.error("The number of threads must be at least 1")
-
 def constants(cluster, log):
     ###### These values are gathered by the tool from Cluster ######
     NUM_NM_WORKERS = len(cluster.yarn.nodemanager.hosts.all())
     NM_WORKER_CORES = cluster.yarn.nodemanager.hosts.max_cores()
     NM_WOKER_MEM = cluster.yarn.nodemanager.hosts.max_memory()
 
+    def num_threads(x):
+        if x and x > 0:
+            return x
+        else:
+            log.error("The number of threads must be at least 1")
 
 
     const = {
@@ -19,12 +18,12 @@ def constants(cluster, log):
         "NUM_THREADS": lambda x: x if x is not None and x > 0 else 1,
         # but if you need something more robust define a def to assign to the dict member
         "NUM_THREADS1": num_threads,
-        "OVER_COMMIT_FACTOR": lambda x: x if x > 0 else 1,
-        "MEM_FRACTION_FOR_HBASE": lambda x: x if x > 0 else 0.2,
-        "MEM_FRACTION_FOR_OTHER_SERVICES": lambda x: x if x > 0 else 1 - const["MEM_FRACTION_FOR_HBASE"],
-        "MAPREDUCE_JOB_COUNTERS_MAX": lambda x: x if x > 0 else 120,
-        "SPARK_DRIVER_MAXPERMSIZE": lambda x: x if x > 0 else 512,
-        "MAPREDUCE_MAP_MINIMUM_MEMORY_MB": lambda x: x if x > 0 else 512,
+        "OVER_COMMIT_FACTOR": lambda x: x if x is not None and x > 0 else 1,
+        "MEM_FRACTION_FOR_HBASE": lambda x: x if x is not None and x > 0 else 0.2,
+        "MEM_FRACTION_FOR_OTHER_SERVICES": lambda x: x if x is not None and x > 0 else 1 - const["MEM_FRACTION_FOR_HBASE"],
+        "MAPREDUCE_JOB_COUNTERS_MAX": lambda x: x if x is not None and x > 0 else 120,
+        "SPARK_DRIVER_MAXPERMSIZE": lambda x: x if x is not None and x > 0 else 512,
+        "MAPREDUCE_MAP_MINIMUM_MEMORY_MB": lambda x: x if x is not None and x > 0 else 512,
         "NUM_NM_WORKERS": NUM_NM_WORKERS,
         "NM_WORKER_CORES": NM_WORKER_CORES,
         "NM_WOKER_MEM": NM_WOKER_MEM,

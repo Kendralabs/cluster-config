@@ -62,8 +62,9 @@ def exec_formula(cluster, args):
     user_formula_args = file.open_yaml_conf(user_formula_args_path)
 
     #execute formula global variables
-    vars = {"KB_to_bytes": KB_to_bytes, "bytes_to_KB": bytes_to_KB, "MB_to_bytes": MB_to_bytes, "bytes_to_MB": bytes_to_MB,
-            "GB_to_bytes": GB_to_bytes, "bytes_to_GB": bytes_to_GB, "TR_to_bytes": TR_to_bytes, "bytes_to_TR": bytes_to_TR }
+    vars = { "log": log, "KB_to_bytes": KB_to_bytes, "bytes_to_KB": bytes_to_KB, "MB_to_bytes": MB_to_bytes,
+             "bytes_to_MB": bytes_to_MB,"GB_to_bytes": GB_to_bytes, "bytes_to_GB": bytes_to_GB, "TR_to_bytes": TR_to_bytes,
+             "bytes_to_TR": bytes_to_TR }
     local = {}
     config = {}
     try:
