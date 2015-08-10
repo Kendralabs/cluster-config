@@ -62,15 +62,26 @@ def exec_formula(cluster, args):
     user_formula_args = file.open_yaml_conf(user_formula_args_path)
 
     #execute formula global variables
-    vars = {"cluster": cluster, "cdh": {}, "atk": {}, "log": log, "args": user_formula_args}
+    vars = {"KB_to_bytes": KB_to_bytes, "bytes_to_KB": bytes_to_KB, "MB_to_bytes": MB_to_bytes, "bytes_to_MB": bytes_to_MB,
+            "GB_to_bytes": GB_to_bytes, "bytes_to_GB": bytes_to_GB, "TR_to_bytes": TR_to_bytes, "bytes_to_TR": bytes_to_TR }
     local = {}
+    config = {}
     try:
         execfile(args.formula, vars, local)
+        constants = local["constants"](cluster, log)
+        for member in constants:
+            if hasattr(constants[member], '__call__'):
+                if member in user_formula_args:
+                    constants[member] = constants[member](user_formula_args[member])
+                else:
+                    constants[member] = constants[member](None)
+
+        config = local["formula"](cluster, log, constants)
+
     except IOError:
         log.fatal("formula file: {0} doesn't exist".format(args.formula))
-    const = Const()
-    local["constans"](cluster, const, log)
-    return vars
+
+    return config
 
 
 def save_cdh_configuration(vars, args):
@@ -98,3 +109,45 @@ def save_atk_configuration(vars, args):
         log.info("Wrote ATK generated configuration file to: {0}".format(path))
     else:
         log.warning("No ATK configurations to save")
+
+def bytes_to_KB(bytes):
+    return bytes_to_x(bytes, "KB")
+
+def KB_to_bytes(K):
+    return x_to_bytes(K, "KB")
+
+def bytes_to_MB(bytes):
+    return bytes_to_x(bytes, "MB")
+
+
+def MB_to_bytes(M):
+    return x_to_bytes(M, "MB")
+
+
+def bytes_to_GB(bytes):
+    return bytes_to_x(bytes, "GB")
+
+
+def GB_to_bytes(G):
+    return x_to_bytes(G, "GB")
+
+
+def bytes_to_TR(bytes):
+    return bytes_to_x(bytes, "TB")
+
+
+def TR_to_bytes(T):
+    return x_to_bytes(T, "TB")
+
+lookup = {
+    "KB": pow(2,10),
+    "MB": pow(2,20),
+    "GB": pow(2,30),
+    "TB": pow(2,40)
+}
+
+def bytes_to_x(bytes, size):
+    return bytes / lookup[size]
+
+def x_to_bytes(x, size):
+    return x * lookup[size]
