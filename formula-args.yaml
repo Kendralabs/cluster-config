@@ -5,4 +5,6 @@ MEM_FRACTION_FOR_HBASE: 0.20  # Suggested Max Memory fraction for HBase
 MEM_FRACTION_FOR_OTHER_SERVICES: 0.20 # Suggested Memory fraction for other system resources
 MAPREDUCE_JOB_COUNTERS_MAX: 500
 SPARK_DRIVER_MAXPERMSIZE: 512 # This is required for running in yarn-cluster mode
-MAPREDUCE_MAP_MINIMUM_MEMORY_MB: 1024 # increase this in 512 increaments in to create larger containers
+YARN_SCHEDULER_MINIMUM_ALLOCATION_MB: 1024 # increase this in 512 increaments but usualy it should not be changed
+MAPREDUCE_MINIMUM_DRIVER_MEMORY_MB: 1024 # increase this in 512 increaments to create larger containers
+MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB: 4096 # increase this in 512 increaments to create larger containers
