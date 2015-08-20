@@ -6,7 +6,8 @@ import cluster_config as cc
 from cluster_config import log
 from cluster_config import file
 from cluster_config.const import Const
-from cluster_config.cdh.cluster import Cluster
+from cluster_config.cdh.cluster import Cluster, save_config
+import cluster_config.cdh as cdh
 from pprint import pprint
 
 
@@ -37,6 +38,7 @@ def run(args, cluster=None):
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if args.formula:
+        cluster_config_json_path = save_config(cluster, args.path)
         #execute formula global variables
         #__import__("cluster_config.formula")
         #pprint(sys.modules)
@@ -49,7 +51,7 @@ def run(args, cluster=None):
 
         save_atk_configuration(vars, args)
 
-        file.snapshots(cluster, args.host, "generate", args.path, args.formula, args.formula_args)
+        file.snapshots(args.host, "generate", args.path, cluster_config_json_path, args.formula, args.formula_args)
     else:
         cc.log.fatal("Formula file must be specified")
 

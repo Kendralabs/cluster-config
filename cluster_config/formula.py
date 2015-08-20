@@ -6,18 +6,10 @@ def constants(cluster, log):
     NM_WORKER_CORES = cluster.yarn.nodemanager.hosts.max_cores()
     NM_WOKER_MEM = cluster.yarn.nodemanager.hosts.max_memory()
 
-    def num_threads(x):
-        if x and x > 0:
-            return x
-        else:
-            log.error("The number of threads must be at least 1")
-
-
     const = {
         #lambdas are cleaner
         "NUM_THREADS": lambda x: x if x is not None and x > 0 else 1,
         # but if you need something more robust define a def to assign to the dict member
-        "NUM_THREADS1": num_threads,
         "OVER_COMMIT_FACTOR": lambda x: x if x is not None and x > 0 else 1,
         "MEM_FRACTION_FOR_HBASE": lambda x: x if x is not None and x > 0 else 0.2,
         "MEM_FRACTION_FOR_OTHER_SERVICES": lambda x: x if x is not None and x > 0 else 1 - const["MEM_FRACTION_FOR_HBASE"],
@@ -72,7 +64,7 @@ def formula(cluster, log, constants):
         cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"]
 
     MEM_FOR_OTHER_SERVICES = int(constants["NM_WOKER_MEM"] * constants["MEM_FRACTION_FOR_OTHER_SERVICES"])
-    MEM_FOR_HBASE_REGION_SERVERS = min(32 * constants["GIB"], int(constants["NM_WOKER_MEM"] * constants["MEM_FRACTION_FOR_HBASE"]))
+    MEM_FOR_HBASE_REGION_SERVERS = min(GB_to_bytes(32), int(constants["NM_WOKER_MEM"] * constants["MEM_FRACTION_FOR_HBASE"]))
     MEM_PER_NM = constants["NM_WOKER_MEM"] - MEM_FOR_OTHER_SERVICES - MEM_FOR_HBASE_REGION_SERVERS
 
     cdh["HBASE.REGIONSERVER.REGIONSERVER_BASE.HBASE_REGIONSERVER_JAVA_HEAPSIZE"] = \
@@ -82,7 +74,7 @@ def formula(cluster, log, constants):
 
     cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] = \
         (
-            int(MEM_PER_NM / constants["MIB"] -
+            int(bytes_to_MB(MEM_PER_NM) -
                 max(
                     constants["SPARK_DRIVER_MAXPERMSIZE"],
                     constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"],
@@ -103,7 +95,7 @@ def formula(cluster, log, constants):
                             "YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] / constants["NM_WORKER_CORES"])
                     / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
                 ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"],
-                constants["MAX_JVM_MEMORY"] / constants["MIB"]
+                bytes_to_MB(constants["MAX_JVM_MEMORY"])
             ), constants["MAPREDUCE_MAP_MINIMUM_MEMORY_MB"]
         )
 
@@ -114,7 +106,7 @@ def formula(cluster, log, constants):
         )
 
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] = \
-        int(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] / constants["OVER_COMMIT_FACTOR"]) * constants["MIB"]
+        int(bytes_to_MB(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] / constants["OVER_COMMIT_FACTOR"]))
 
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_JAVA_OPTS_MAX_HEAP"] = \
         2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]
@@ -173,6 +165,6 @@ def formula(cluster, log, constants):
         atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"]
 
     atk["trustedanalytics.atk.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
-        "\"-Xmx%sm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] / constants["MIB"])
+        "\"-Xmx%sm\"" % (bytes_to_MB(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]))
 
     return {"cdh": cdh, "atk": atk}
