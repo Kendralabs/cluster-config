@@ -3,7 +3,7 @@ import argparse
 import cluster_config as cc
 from cluster_config import log
 from cluster_config import file
-from cluster_config.cdh.cluster import Cluster
+from cluster_config.cdh.cluster import Cluster, save_config
 
 
 def cli(parser=None):
@@ -34,7 +34,7 @@ def run(args, cluster=None):
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if cluster:
-
+        cluster_before = save_config(cluster, args.path, "before")
         #Read the generated configs
         cdh_config_path = file.file_path(cc.CDH_CONFIG, args.path)
         log.info("Reading CDH config file: {0}".format(cdh_config_path))
@@ -61,7 +61,9 @@ def run(args, cluster=None):
             #iterate through services, set cdh configs and possibly restart services
             cluster.update_configs(configs, False if args.restart_cdh == "no" else True)
 
-        file.snapshots(cluster, args.host, "push", args.path, cdh_config_path, user_cdh_config_path, merged_config_path)
+        cluster_after = save_config(cluster, args.path, "after")
+        file.snapshots(args.host, "push", args.path, None, cluster_before, cluster_after,  cdh_config_path,
+                       user_cdh_config_path, merged_config_path)
 
     else:
         log.fatal("Couldn't connect to the CDH cluster")

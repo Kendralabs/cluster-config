@@ -8,6 +8,7 @@ from cluster_config import file
 from cluster_config.const import Const
 from cluster_config.cdh.cluster import Cluster, save_config
 import cluster_config.cdh as cdh
+import time, datetime
 from pprint import pprint
 
 
@@ -23,8 +24,7 @@ def cli(parser=None):
 
     parser.add_argument("--formula-args", type=str,
                         help="formula arguments to possibly override constants.".
-                        format(default_formula),
-                        default=default_formula)
+                        format(default_formula))
 
     return parser
 
@@ -38,7 +38,8 @@ def run(args, cluster=None):
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if args.formula:
-        cluster_config_json_path = save_config(cluster, args.path)
+        #dt = datetime.datetime.now()
+        cluster_config_json_path = save_config(cluster, args.path, "before")
         #execute formula global variables
         #__import__("cluster_config.formula")
         #pprint(sys.modules)
@@ -51,7 +52,7 @@ def run(args, cluster=None):
 
         save_atk_configuration(vars, args)
 
-        file.snapshots(args.host, "generate", args.path, cluster_config_json_path, args.formula, args.formula_args)
+        file.snapshots(args.host, "generate", args.path, None, cluster_config_json_path, args.formula, args.formula_args)
     else:
         cc.log.fatal("Formula file must be specified")
 

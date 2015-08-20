@@ -215,8 +215,12 @@ class Cluster(object):
         self._user_cluster_name = cluster_name
 
 
-def save_config(cluster, path):
-    cdh_json_path = file_path(ALL_CLUSTER_CONFIGS, path)
+def save_config(cluster, path, name=None):
+    if name is None:
+        name = ALL_CLUSTER_CONFIGS
+    else:
+        name = "{0}-{1}".format(name, ALL_CLUSTER_CONFIGS)
+    cdh_json_path = file_path(name, path)
     write_json_conf(json(cluster), cdh_json_path)
     return cdh_json_path
 
