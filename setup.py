@@ -44,8 +44,8 @@ setup(
     # Dependent packages (distributions)
     install_requires=[
         'argparse >= 1.3.0',
-        'cm-api == 9.0.0',
-        'pyyaml == 3.11'
+        'cm-api >= 9.0.0',
+        'pyyaml >= 3.11'
     ],
     **extra
 )
