@@ -29,7 +29,7 @@ def main():
     run(cc.cli.parse(cli()))
 
 
-def run(args, cluster=None):
+def run(args, cluster=None, dt=None):
     if cluster is None:
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
@@ -62,7 +62,7 @@ def run(args, cluster=None):
             cluster.update_configs(configs, False if args.restart_cdh == "no" else True)
 
         cluster_after = save_config(cluster, args.path, "after")
-        file.snapshots(args.host, "push", args.path, None, cluster_before, cluster_after,  cdh_config_path,
+        file.snapshots(args.host, "push", args.path, dt, cluster_before, cluster_after,  cdh_config_path,
                        user_cdh_config_path, merged_config_path)
 
     else:

@@ -9,6 +9,7 @@ from cluster_config.const import Const
 from cluster_config.cdh.cluster import Cluster, save_config
 import cluster_config.cdh as cdh
 import time, datetime
+import inspect
 from pprint import pprint
 
 
@@ -33,26 +34,21 @@ def main():
     run(cc.cli.parse(cli()))
 
 
-def run(args, cluster=None):
+def run(args, cluster=None, dt=None):
     if cluster is None:
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if args.formula:
-        #dt = datetime.datetime.now()
         cluster_config_json_path = save_config(cluster, args.path, "before")
-        #execute formula global variables
-        #__import__("cluster_config.formula")
-        #pprint(sys.modules)
-        #sys.exit(1)
-        #mymodule = sys.modules[module_name]
 
         vars = exec_formula(cluster, args)
 
-        save_cdh_configuration(vars, args)
+        cdh_config_path = save_cdh_configuration(vars, args)
 
-        save_atk_configuration(vars, args)
+        atk_config_path = save_atk_configuration(vars, args)
 
-        file.snapshots(args.host, "generate", args.path, None, cluster_config_json_path, args.formula, args.formula_args)
+        file.snapshots(args.host, "generate", args.path, dt, cdh_config_path, atk_config_path, cluster_config_json_path,
+                       args.formula, args.formula_args)
     else:
         cc.log.fatal("Formula file must be specified")
 
@@ -76,9 +72,14 @@ def exec_formula(cluster, args):
         for member in constants:
             if hasattr(constants[member], '__call__'):
                 if member in user_formula_args:
+                    if constants[member](user_formula_args[member]) != user_formula_args[member]:
+                        log.warning("Formula arg value '{0}' was ignored using default '{1}'. Formula arg value must adhere to these rules {2}  ".format(user_formula_args[member],constants[member](user_formula_args[member]), inspect.getsource(constants[member])))
+
                     constants[member] = constants[member](user_formula_args[member])
                 else:
                     constants[member] = constants[member](None)
+
+
 
         config = local["formula"](cluster, log, constants)
 
@@ -89,6 +90,7 @@ def exec_formula(cluster, args):
 
 
 def save_cdh_configuration(vars, args):
+
     if len(vars["cdh"]) > 0:
         temp = {}
         path = file.file_path(cc.CDH_CONFIG, args.path)
@@ -97,8 +99,10 @@ def save_cdh_configuration(vars, args):
             cc.dict.nest(temp, key_split, vars["cdh"][key])
         file.write_json_conf(temp, path)
         log.info("Wrote CDH configuration file to: {0}".format(path))
+        return path
     else:
         log.warning("No CDH configurations to save.")
+        return None
 
 
 def save_atk_configuration(vars, args):
@@ -106,13 +110,13 @@ def save_atk_configuration(vars, args):
         path = file.file_path(cc.ATK_CONFIG, args.path)
         f = open(path, "w+")
         for key in vars["atk"]:
-
             print("{0}={1}".format(key, vars["atk"][key]), file=f)
-
         f.close()
         log.info("Wrote ATK generated configuration file to: {0}".format(path))
+        return path
     else:
         log.warning("No ATK configurations to save")
+        return None
 
 def bytes_to_kb(bytes):
     return bytes_to_x(bytes, "KB")

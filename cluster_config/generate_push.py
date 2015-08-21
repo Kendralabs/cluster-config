@@ -2,6 +2,8 @@ from __future__ import print_function
 import argparse
 from cluster_config.cdh.cluster import Cluster
 from cluster_config import generate, push
+import datetime
+
 
 
 def cli(parser=None):
@@ -16,16 +18,18 @@ def cli(parser=None):
 
 def main():
     from cluster_config.cdh.cluster import Cluster
-    #from cluster_config import push
+    from cluster_config import push
     from cluster_config.cli import parse
-    args = parse(cli())
+    args = parse(push.cli())
     cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
-    run(args, cluster)
+    push.run(args, cluster)
 
 
 def run(args, cluster=None):
     if cluster is None:
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
-    generate.run(args, cluster)
-    push.run(args, cluster)
+    dt = datetime.datetime.now()
+    generate.run(args, cluster, dt)
+    push.run(args, cluster, dt)
+

@@ -49,7 +49,7 @@ def snapshots(host, action, path, gen_dt=None, *args):
         if arg:
             log.info("Snapshotting: {0} ".format(arg))
             try:
-                shutil.copy(arg, "{0}/{1}-{2}".format(snapshot_folder, action, os.path.basename(arg)))
+                shutil.copy(arg, "{0}/{1}-{2}-{3}".format(snapshot_folder, prefix, action, os.path.basename(arg)))
             except IOError:
                 log.warning("Couldn't create snapshot for: {0} ".format(arg))
 
