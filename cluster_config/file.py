@@ -5,7 +5,7 @@ import yaml
 import cluster_config as cc
 from cluster_config import log
 import cluster_config.cdh as cdh
-import time
+import time, datetime
 import shutil
 
 
@@ -26,13 +26,22 @@ def open_json_conf(path):
     :return: dictionary of the json file
     """
     log.debug("open_json_conf: {0}".format(path))
-    conf = json.loads(open_file(path))
+    conf = None
+    try:
+        f = io.open(path, encoding="utf-8", mode="r")
+        conf = json.load(f)
+    except IOError:
+        log.warning("Couldn't open file: {0}".format(path))
+
     return conf
 
 
-def snapshots(host, action, path, *args):
+def snapshots(host, action, path, gen_dt=None, *args):
     log.info("Creating file snapshots")
-    prefix = "{0}-{1}".format(host, time.strftime("%Y_%m_%d_%H_%M_%S"))
+    if gen_dt is None:
+        gen_dt = datetime.datetime.now()
+
+    prefix = "{0}-{1}".format(host, gen_dt.strftime("%Y_%m_%d_%H_%M_%S"))
     snapshot_folder = file_path(prefix, path)
     log.info("Creating snapshot folder:{0}".format(snapshot_folder))
     check_dir_exists(snapshot_folder)
@@ -43,10 +52,6 @@ def snapshots(host, action, path, *args):
                 shutil.copy(arg, "{0}/{1}-{2}-{3}".format(snapshot_folder, prefix, action, os.path.basename(arg)))
             except IOError:
                 log.warning("Couldn't create snapshot for: {0} ".format(arg))
-
-    #cdh_json_path = file_path(cc.ALL_CLUSTER_CONFIGS, path)
-    #write_json_conf(cdh.json(cluster), cdh_json_path)
-    #shutil.copy(cdh_json_path, "{0}/{1}-{2}-{3}".format(snapshot_folder, prefix, action, os.path.basename(cdh_json_path)))
 
 
 def check_dir_exists(path):
