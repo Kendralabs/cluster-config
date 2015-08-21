@@ -4,6 +4,8 @@ from cm_api.api_client import ApiResource
 from urllib2 import URLError
 from cluster_config.cdh.service import Service
 from cluster_config import log
+from cluster_config.file import file_path, write_json_conf
+from cluster_config import ALL_CLUSTER_CONFIGS
 
 
 class Cluster(object):
@@ -212,3 +214,20 @@ class Cluster(object):
     def user_cluster_name(self, cluster_name):
         self._user_cluster_name = cluster_name
 
+
+def save_config(cluster, path):
+    cdh_json_path = file_path(ALL_CLUSTER_CONFIGS, path)
+    write_json_conf(json(cluster), cdh_json_path)
+    return cdh_json_path
+
+def json(cluster):
+    configs = {}
+    for service in cluster.services:
+        configs[service] = {}
+        for role in cluster.services[service].roles:
+            configs[service][role] = {}
+            for config_group in cluster.services[service].roles[role].config_groups:
+                configs[service][role][config_group] = {}
+                for config in cluster.services[service].roles[role].config_groups[config_group].configs:
+                    configs[service][role][config_group][config] = cluster.services[service].roles[role].config_groups[config_group].configs[config].value
+    return configs

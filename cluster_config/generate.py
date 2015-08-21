@@ -1,10 +1,14 @@
 from __future__ import print_function
 import os
+import sys
 import argparse
 import cluster_config as cc
 from cluster_config import log
 from cluster_config import file
-from cluster_config.cdh.cluster import Cluster
+from cluster_config.const import Const
+from cluster_config.cdh.cluster import Cluster, save_config
+import cluster_config.cdh as cdh
+from pprint import pprint
 
 
 def cli(parser=None):
@@ -34,14 +38,20 @@ def run(args, cluster=None):
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if args.formula:
+        cluster_config_json_path = save_config(cluster, args.path)
         #execute formula global variables
+        #__import__("cluster_config.formula")
+        #pprint(sys.modules)
+        #sys.exit(1)
+        #mymodule = sys.modules[module_name]
+
         vars = exec_formula(cluster, args)
 
         save_cdh_configuration(vars, args)
 
         save_atk_configuration(vars, args)
 
-        file.snapshots(cluster, args.host, "generate", args.path, args.formula, args.formula_args)
+        file.snapshots(args.host, "generate", args.path, cluster_config_json_path, args.formula, args.formula_args)
     else:
         cc.log.fatal("Formula file must be specified")
 
@@ -54,13 +64,27 @@ def exec_formula(cluster, args):
     user_formula_args = file.open_yaml_conf(user_formula_args_path)
 
     #execute formula global variables
-    vars = {"cluster": cluster, "cdh": {}, "atk": {}, "log": log, "args": user_formula_args}
+    vars = { "log": log, "kb_to_bytes": kb_to_bytes, "bytes_to_kb": bytes_to_kb, "mb_to_bytes": mb_to_bytes,
+             "bytes_to_mb": bytes_to_mb,"gb_to_bytes": gb_to_bytes, "bytes_to_gb": bytes_to_gb, "tr_to_bytes": tr_to_bytes,
+             "bytes_to_tr": bytes_to_tr }
+    local = {}
+    config = {}
     try:
-        execfile(args.formula, vars)
+        execfile(args.formula, vars, local)
+        constants = local["constants"](cluster, log)
+        for member in constants:
+            if hasattr(constants[member], '__call__'):
+                if member in user_formula_args:
+                    constants[member] = constants[member](user_formula_args[member])
+                else:
+                    constants[member] = constants[member](None)
+
+        config = local["formula"](cluster, log, constants)
+
     except IOError:
         log.fatal("formula file: {0} doesn't exist".format(args.formula))
 
-    return vars
+    return config
 
 
 def save_cdh_configuration(vars, args):
@@ -88,3 +112,45 @@ def save_atk_configuration(vars, args):
         log.info("Wrote ATK generated configuration file to: {0}".format(path))
     else:
         log.warning("No ATK configurations to save")
+
+def bytes_to_kb(bytes):
+    return bytes_to_x(bytes, "KB")
+
+def kb_to_bytes(K):
+    return x_to_bytes(K, "KB")
+
+def bytes_to_mb(bytes):
+    return bytes_to_x(bytes, "MB")
+
+
+def mb_to_bytes(M):
+    return x_to_bytes(M, "MB")
+
+
+def bytes_to_gb(bytes):
+    return bytes_to_x(bytes, "GB")
+
+
+def gb_to_bytes(G):
+    return x_to_bytes(G, "GB")
+
+
+def bytes_to_tr(bytes):
+    return bytes_to_x(bytes, "TB")
+
+
+def tr_to_bytes(T):
+    return x_to_bytes(T, "TB")
+
+lookup = {
+    "KB": pow(2,10),
+    "MB": pow(2,20),
+    "GB": pow(2,30),
+    "TB": pow(2,40)
+}
+
+def bytes_to_x(bytes, size):
+    return bytes / lookup[size]
+
+def x_to_bytes(x, size):
+    return x * lookup[size]

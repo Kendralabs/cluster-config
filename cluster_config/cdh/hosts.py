@@ -12,6 +12,25 @@ class Hosts(object):
     def add(self, hostId):
         self.hosts[hostId] = hosts.get_host(self.cdh_resource_root, hostId)
 
+    def max_cores(self, physical=False):
+        max = 0
+        for host in self.hosts:
+            if physical:
+                if self.hosts[host].numPhysicalCores > max:
+                    max = self.hosts[host].numPhysicalCores
+            else:
+                if self.hosts[host].numCores > max:
+                    max = self.hosts[host].numCores
+        return max
+
+    def max_memory(self):
+        max = 0
+        for host in self.hosts:
+            if self.hosts[host].totalPhysMemBytes > max:
+                max = self.hosts[host].totalPhysMemBytes
+
+        return max
+
     def memory(self):
         memory = {}
         for key in self.hosts:

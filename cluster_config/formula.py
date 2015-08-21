@@ -1,207 +1,177 @@
 # from cluster_config import log
 
-# Simple MB, GB and TB to Bytes calculator
-KiB = 1024
-MiB = KiB * 1024
-GiB = MiB * 1024
-TiB = GiB * 1024
-MIN_NM_MEMORY = 8 * GiB
+def constants(cluster, log):
 
-# Validate user defined parameters in forumual-args.yaml file
-NUM_THREADS = args['NUM_THREADS']
-if (NUM_THREADS < 1):
-    log.fatal("{0} must be at least 1".format("NUM_THREADS"))
+    const = {
+        "NUM_NM_WORKERS": len(cluster.yarn.nodemanager.hosts.all()),
+        "NM_WORKER_CORES": cluster.yarn.nodemanager.hosts.max_cores(),
+        "NM_WORKER_MEM": cluster.yarn.nodemanager.hosts.max_memory(),
+        "MIN_NM_MEMORY": gb_to_bytes(8),
+        # lambdas are cleaner
+        "NUM_THREADS": lambda x: x if x is not None and x > 0 else 1,
+        "OVER_COMMIT_FACTOR": lambda x: x if x is not None and x >= 1 else 1,
+        "MEM_FRACTION_FOR_HBASE": lambda x: x if x is not None and x >= 0 and x < 1 else 0.125,
+        "MEM_FRACTION_FOR_OTHER_SERVICES": lambda x: x if x is not None and x >= 0 and x < 1 else 0.125,
+        "MAPREDUCE_JOB_COUNTERS_MAX": lambda x: x if x is not None and x >= 120 else 500,
+        "SPARK_DRIVER_MAXPERMSIZE": lambda x: x if x is not None and x >= 512 else 512,
+        "YARN_SCHEDULER_MINIMUM_ALLOCATION_MB": lambda x: x if x is not None and x >= 1024 else 1024,
+        "MAPREDUCE_MINIMUM_AM_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024,
+        "MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >=1024 else 4096
+    }
 
-OVER_COMMIT_FACTOR = args['OVER_COMMIT_FACTOR']
-if (OVER_COMMIT_FACTOR < 1):
-    log.fatal("{0} must be at least 1".format("OVER_COMMIT_FACTOR"))
+    if (const["NM_WORKER_MEM"] < (const["MIN_NM_MEMORY"])):
+        log.fatal(
+            "Running the toolkit with less than {0}GB memory for YARN is not supported.".format(const["MIN_NM_MEMORY"]))
+    elif (const["NM_WORKER_MEM"] <= (gb_to_bytes(256))):
+        # Java Heap Size should not go over 25% of total memory per node manager
+        const["MAX_JVM_MEMORY"] = const["NM_WORKER_MEM"] / 4
+    else:
+        # for node managers with greater than 256 GB RAM, JVM memory should still be at most 64GB
+        const["MAX_JVM_MEMORY"] = gb_to_bytes(64)
 
-MEM_FRACTION_FOR_HBASE = args['MEM_FRACTION_FOR_HBASE']
-if (MEM_FRACTION_FOR_HBASE < 0 or MEM_FRACTION_FOR_HBASE >= 1):
-    log.fatal("{0} must be non-nagative and smaller than 1".format("MEM_FRACTION_FOR_HBASE"))
+    return const
 
-MEM_FRACTION_FOR_OTHER_SERVICES = args['MEM_FRACTION_FOR_OTHER_SERVICES']
-if (MEM_FRACTION_FOR_OTHER_SERVICES < 0 or (MEM_FRACTION_FOR_OTHER_SERVICES >= (1 - MEM_FRACTION_FOR_HBASE))):
-    log.fatal("{0} must be non-nagative and smaller than {1}".format("MEM_FRACTION_FOR_OTHER_SERVICES",
-                                                                     1 - MEM_FRACTION_FOR_HBASE))
 
-MAPREDUCE_JOB_COUNTERS_MAX = args['MAPREDUCE_JOB_COUNTERS_MAX']
-if (MAPREDUCE_JOB_COUNTERS_MAX < 120):
-    log.fatal("{0} must be greater or equal {1}".format("MAPREDUCE_JOB_COUNTERS_MAX", 120))
+def formula(cluster, log, constants):
+    cdh = {}
+    atk = {}
 
-SPARK_DRIVER_MAXPERMSIZE = args['SPARK_DRIVER_MAXPERMSIZE']
-if (SPARK_DRIVER_MAXPERMSIZE < 512):
-    log.fatal("{0} must be at least {1}MB.".format("SPARK_DRIVER_MAXPERMSIZE", 512))
+    # Validate user defined parameters in forumual-args.yaml file
+    if (bytes_to_mb(constants["MAX_JVM_MEMORY"]) < constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"]):
+        log.warning("Container larger than {0}MB are not supported".format(constants["MAX_JVM_MEMORY"]))
 
-YARN_SCHEDULER_MINIMUM_ALLOCATION_MB = args['YARN_SCHEDULER_MINIMUM_ALLOCATION_MB']
-if (YARN_SCHEDULER_MINIMUM_ALLOCATION_MB < 512):
-    log.fatal("Containers less than {0}MB are not supported".format(YARN_SCHEDULER_MINIMUM_ALLOCATION_MB))
-elif (YARN_SCHEDULER_MINIMUM_ALLOCATION_MB != (YARN_SCHEDULER_MINIMUM_ALLOCATION_MB / 512) * 512):
-    log.fatal("{0} must be dividable by {1}".format('YARN_SCHEDULER_MINIMUM_ALLOCATION_MB', 512))
+    if (constants["MEM_FRACTION_FOR_OTHER_SERVICES"] < 0 or (constants["MEM_FRACTION_FOR_OTHER_SERVICES"] >= (1 - constants["MEM_FRACTION_FOR_HBASE"]))):
+        log.fatal("{0} must be non-nagative and smaller than {1}".format("MEM_FRACTION_FOR_OTHER_SERVICES",
+                                                                         1 - constants["MEM_FRACTION_FOR_HBASE"]))
+    constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_AM_MEMORY_MB"] * 0.07)
+    constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"] * 0.07)
 
-MAPREDUCE_MINIMUM_AM_MEMORY_MB = args['MAPREDUCE_MINIMUM_AM_MEMORY_MB']
-if (MAPREDUCE_MINIMUM_AM_MEMORY_MB < 512):
-    log.fatal("Containers less than {0}MB are not supported".format(MAPREDUCE_MINIMUM_AM_MEMORY_MB))
-elif (MAPREDUCE_MINIMUM_AM_MEMORY_MB != (MAPREDUCE_MINIMUM_AM_MEMORY_MB / 512) * 512):
-    log.fatal("{0} must be dividable by {1}".format('MAPREDUCE_MINIMUM_AM_MEMORY_MB', 512))
+    ###### These values are gathered by the tool from Cluster ######
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
+        "\"%dm\"" % (constants["SPARK_DRIVER_MAXPERMSIZE"])
 
-MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB = args['MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB']
-if (MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB < 512):
-    log.fatal("Containers less than {0}MB are not supported".format(MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB))
-elif (MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB != (MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB / 512) * 512):
-    log.fatal("{0} must be dividable by {1}".format('MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB', 512))
+    constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_AM_MEMORY_MB"] * 0.07)
+    constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"] * 0.07)
 
-hosts = cluster.yarn.nodemanager.hosts.all()
-max_cores = 0
-max_memory = 0
-for key in hosts:
-    if hosts[key].numCores > max_cores:
-        max_cores = hosts[key].numCores
-    if hosts[key].totalPhysMemBytes > max_memory:
-        max_memory = hosts[key].totalPhysMemBytes
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
+        "\"%d\"" % (constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"])
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = \
+        "\"%d\"" % (constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"])
 
-cdh = {}
-atk = {}
+    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] = constants["NM_WORKER_CORES"]
 
-###### These values are gathered by the tool from Cluster ######
-NUM_NM_WORKERS = len(hosts)
-NM_WORKER_CORES = max_cores
-NM_WOKER_MEM = max_memory
+    cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_CPU_VCORES"] = 1
 
-if (max_memory < (MIN_NM_MEMORY)):
-    log.fatal("Running the toolkit with less than {0}GB memory for YARN is not supported.".format(MIN_NM_MEMORY))
-elif (max_memory <= (256 * GiB)):
-    MAX_JVM_MEMORY = max_memory / 4  # Java Heap Size should not go over 25% of total memory per node manager
-else:
-    MAX_JVM_MEMORY = 64 * GiB  # for node managers with greater than 256 GB RAM, JVM memory should still be at most 64GB
+    cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_JOB_COUNTERS_LIMIT"] = constants["MAPREDUCE_JOB_COUNTERS_MAX"]
+    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"] = \
+        "<property><name>mapreduce.job.counters.max</name><value>%d</value></property>" % (constants["MAPREDUCE_JOB_COUNTERS_MAX"])
+    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.RESOURCEMANAGER_MAPRED_SAFETY_VALVE"] = \
+        cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"]
+    cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_MAPRED_SAFETY_VALVE"] = \
+        cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"]
 
-if ((MAX_JVM_MEMORY / MiB) < MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB):
-    log.fatal("Container larger than {0}MB are not supported".format(MAX_JVM_MEMORY))
+    MEM_FOR_OTHER_SERVICES = int(constants["NM_WORKER_MEM"] * constants["MEM_FRACTION_FOR_OTHER_SERVICES"])
+    MEM_FOR_HBASE_REGION_SERVERS = min(gb_to_bytes(32), int(constants["NM_WORKER_MEM"] * constants["MEM_FRACTION_FOR_HBASE"]))
+    MEM_PER_NM = constants["NM_WORKER_MEM"] - MEM_FOR_OTHER_SERVICES - MEM_FOR_HBASE_REGION_SERVERS
 
-atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
-    "\"%dm\"" % (SPARK_DRIVER_MAXPERMSIZE)
+    cdh["HBASE.REGIONSERVER.REGIONSERVER_BASE.HBASE_REGIONSERVER_JAVA_HEAPSIZE"] = \
+        int(MEM_FOR_HBASE_REGION_SERVERS / constants["OVER_COMMIT_FACTOR"])
 
-SPARK_YARN_DRIVER_MEMORYOVERHEAD = max(384,MAPREDUCE_MINIMUM_AM_MEMORY_MB * 0.07)
-SPARK_YARN_EXECUTOR_MEMORYOVERHEAD = max(384,MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB * 0.07)
+    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"] = 512
 
-atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
-    "\"%d\"" % (SPARK_YARN_DRIVER_MEMORYOVERHEAD)
-atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = \
-    "\"%d\"" % (SPARK_YARN_EXECUTOR_MEMORYOVERHEAD)
-
-cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] = NM_WORKER_CORES
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_CPU_VCORES"] = 1
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_JOB_COUNTERS_LIMIT"] = MAPREDUCE_JOB_COUNTERS_MAX
-cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"] = \
-    "<property><name>mapreduce.job.counters.max</name><value>%d</value></property>" % (MAPREDUCE_JOB_COUNTERS_MAX)
-cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.RESOURCEMANAGER_MAPRED_SAFETY_VALVE"] = \
-    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"]
-cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_MAPRED_SAFETY_VALVE"] = \
-    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"]
-
-MEM_FOR_OTHER_SERVICES = int(NM_WOKER_MEM * MEM_FRACTION_FOR_OTHER_SERVICES)
-MEM_FOR_HBASE_REGION_SERVERS = min(32 * GiB, int(NM_WOKER_MEM * MEM_FRACTION_FOR_HBASE))
-MEM_PER_NM = NM_WOKER_MEM - MEM_FOR_OTHER_SERVICES - MEM_FOR_HBASE_REGION_SERVERS
-
-cdh["HBASE.REGIONSERVER.REGIONSERVER_BASE.HBASE_REGIONSERVER_JAVA_HEAPSIZE"] = \
-    int(MEM_FOR_HBASE_REGION_SERVERS / OVER_COMMIT_FACTOR)
-
-cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"] = 512
-
-cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] = \
-    (
-        int(MEM_PER_NM / MiB -
-            max(
-                SPARK_DRIVER_MAXPERMSIZE,
-                SPARK_YARN_DRIVER_MEMORYOVERHEAD,
-                SPARK_YARN_EXECUTOR_MEMORYOVERHEAD
-            ) * 3
-        ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
-    ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
-
-cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"] = \
-    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"]
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] = \
-    max(
-        min(
-            (
-                (
-                    cdh[
-                        "YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] / NM_WORKER_CORES)
-                / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
-            ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"],
-            MAX_JVM_MEMORY / MiB
-        ), MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB
-    )
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_MEMORY_MB"] = \
-    min(
-        2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"],
-        MAX_JVM_MEMORY / MiB
-    )
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] = \
-    int(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] / OVER_COMMIT_FACTOR) * MiB
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_JAVA_OPTS_MAX_HEAP"] = \
-    2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]
-
-cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MINIMUM_ALLOCATION_MB"] = \
-    YARN_SCHEDULER_MINIMUM_ALLOCATION_MB
-
-cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_VCORES"] = \
-    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"]
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] = \
-    MAPREDUCE_MINIMUM_AM_MEMORY_MB
-
-cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_MAX_HEAP"] = \
-    int(cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] / OVER_COMMIT_FACTOR) * MiB
-
-CONTAINERS_ACCROSS_CLUSTER = \
-    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"] \
-    / (
+    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] = \
         (
-            cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] + (
-                2 *
+            int(bytes_to_mb(MEM_PER_NM) -
                 max(
-                    SPARK_YARN_DRIVER_MEMORYOVERHEAD,
-                    SPARK_YARN_EXECUTOR_MEMORYOVERHEAD,
-                    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
-                ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
-            ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+                    constants["SPARK_DRIVER_MAXPERMSIZE"],
+                    constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"],
+                    constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"]
+                ) * 3
+            ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+        ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+
+    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"] = \
+        cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"]
+
+    cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] = \
+        max(
+            min(
+                (
+                    (
+                        cdh[
+                            "YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_MB"] / constants["NM_WORKER_CORES"])
+                    / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+                ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"],
+                bytes_to_mb(constants["MAX_JVM_MEMORY"])
+            ), constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"]
         )
-    ) * NUM_NM_WORKERS
 
-if NUM_THREADS > (CONTAINERS_ACCROSS_CLUSTER / 2):
-    log.fatal("Number of concurrent threads should be at most {0}"
-              .format((min(CONTAINERS_ACCROSS_CLUSTER, CONTAINERS_ACCROSS_CLUSTER) / 2))
-    )
+    cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_MEMORY_MB"] = \
+        min(
+            2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"],
+            bytes_to_mb(constants["MAX_JVM_MEMORY"])
+        )
 
-log.info("{0} could be as large as {1} for multi-tenacty".format("NUM_THREADS", (CONTAINERS_ACCROSS_CLUSTER / 2)))
+    cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] = \
+        mb_to_bytes(int(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] / constants["OVER_COMMIT_FACTOR"]))
 
-atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"] = \
-    int((CONTAINERS_ACCROSS_CLUSTER - NUM_THREADS) / NUM_THREADS)
+    cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_JAVA_OPTS_MAX_HEAP"] = \
+        2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]
 
-atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.memory"] = \
-    "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
+    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MINIMUM_ALLOCATION_MB"] = \
+        constants["YARN_SCHEDULER_MINIMUM_ALLOCATION_MB"]
 
-atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.cores"] = \
-    (cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] * NUM_NM_WORKERS - NUM_THREADS) \
-    / (NUM_THREADS * atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"])
+    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_MAXIMUM_ALLOCATION_VCORES"] = \
+        cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"]
 
-atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.memory"] = \
-    "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
+    cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] = \
+        constants["MAPREDUCE_MINIMUM_AM_MEMORY_MB"]
 
-atk["trustedanalytics.atk.engine.giraph.mapreduce.map.memory.mb"] = \
-    cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
+    cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_MAX_HEAP"] = \
+        mb_to_bytes(int(cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] / constants["OVER_COMMIT_FACTOR"]))
 
-atk["trustedanalytics.atk.engine.giraph.giraph.maxWorkers"] = \
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"]
+    CONTAINERS_ACCROSS_CLUSTER = \
+        cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"] \
+        / (
+            (
+                cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] + (
+                    2 *
+                    max(
+                        constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"],
+                        constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"],
+                        cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+                    ) / cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+                ) * cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"]
+            )
+        ) * constants["NUM_NM_WORKERS"]
 
-atk["trustedanalytics.atk.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
-    "\"-Xmx%sm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] / MiB)
+    if constants["NUM_THREADS"] > (CONTAINERS_ACCROSS_CLUSTER / 2):
+        log.fatal("Number of concurrent threads should be at most {0}"
+                  .format((min(CONTAINERS_ACCROSS_CLUSTER, CONTAINERS_ACCROSS_CLUSTER) / 2))
+        )
 
+    log.info("{0} could be as large as {1} for multi-tenacty".format("NUM_THREADS", (CONTAINERS_ACCROSS_CLUSTER / 2)))
+
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"] = \
+        int((CONTAINERS_ACCROSS_CLUSTER - constants["NUM_THREADS"]) / constants["NUM_THREADS"])
+
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.memory"] = \
+        "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
+
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.cores"] = \
+        (cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] * constants["NUM_NM_WORKERS"] - constants["NUM_THREADS"]) \
+        / (constants["NUM_THREADS"] * atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"])
+
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.memory"] = \
+        "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
+
+    atk["trustedanalytics.atk.engine.giraph.mapreduce.map.memory.mb"] = \
+        cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
+
+    atk["trustedanalytics.atk.engine.giraph.giraph.maxWorkers"] = \
+        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"]
+
+    atk["trustedanalytics.atk.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
+        "\"-Xmx%sm\"" % (bytes_to_mb(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]))
+
+    return {"cdh": cdh, "atk": atk}

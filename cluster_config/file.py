@@ -25,18 +25,12 @@ def open_json_conf(path):
     :param path: the full file path including file name
     :return: dictionary of the json file
     """
-    conf = None
     log.debug("open_json_conf: {0}".format(path))
-    try:
-        config_json_open = io.open(path, encoding="utf-8", mode="r")
-        conf = json.loads(config_json_open.read())
-        config_json_open.close()
-    except IOError:
-        log.warning("Couldn't open json file: {0}".format(path))
+    conf = json.loads(open_file(path))
     return conf
 
 
-def snapshots(cluster, host, action, path, *args):
+def snapshots(host, action, path, *args):
     log.info("Creating file snapshots")
     prefix = "{0}-{1}".format(host, time.strftime("%Y_%m_%d_%H_%M_%S"))
     snapshot_folder = file_path(prefix, path)
@@ -50,9 +44,9 @@ def snapshots(cluster, host, action, path, *args):
             except IOError:
                 log.warning("Couldn't create snapshot for: {0} ".format(arg))
 
-    cdh_json_path = file_path(cc.ALL_CLUSTER_CONFIGS, path)
-    write_json_conf(cdh.json(cluster), cdh_json_path)
-    shutil.copy(cdh_json_path, "{0}/{1}-{2}-{3}".format(snapshot_folder, prefix, action, os.path.basename(cdh_json_path)))
+    #cdh_json_path = file_path(cc.ALL_CLUSTER_CONFIGS, path)
+    #write_json_conf(cdh.json(cluster), cdh_json_path)
+    #shutil.copy(cdh_json_path, "{0}/{1}-{2}-{3}".format(snapshot_folder, prefix, action, os.path.basename(cdh_json_path)))
 
 
 def check_dir_exists(path):
@@ -85,3 +79,14 @@ def open_yaml_conf(path):
         log.warning("Couldn't open yaml file: {0}".format(path))
     return args
 
+
+def open_file(path):
+    file_string = None
+    log.debug("opening file: {0}". format(path))
+    try:
+        file_pointer = io.open(path, encoding="utf-8", mode="r")
+        file_string = file_pointer.read()
+        file_pointer.close()
+    except IOError:
+        log.warning("Couldn't open yaml file: {0}".format(path))
+    return file_string

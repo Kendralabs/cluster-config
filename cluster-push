@@ -3,4 +3,3 @@
 if __name__ == "__main__":
     from cluster_config.push import main
     main()
-
