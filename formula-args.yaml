@@ -1,7 +1,7 @@
 # User defined parameters, please don't modify unless you are an advanced user
 NUM_THREADS: 1  # This should be set to the maximum number of munti-tenant users
-OVER_COMMIT_FACTOR: 10.30 # Overcommit factor for JVM
-MEM_FRACTION_FOR_HBASE: 2.125  # Suggested Max Memory fraction for HBase
+OVER_COMMIT_FACTOR: 1.30 # Overcommit factor for JVM
+MEM_FRACTION_FOR_HBASE: 0.125  # Suggested Max Memory fraction for HBase
 MEM_FRACTION_FOR_OTHER_SERVICES: 0.125 # Suggested Memory fraction for other system resources
 MAPREDUCE_JOB_COUNTERS_MAX: 500
 SPARK_DRIVER_MAXPERMSIZE: 512 # This is required for running in yarn-cluster mode

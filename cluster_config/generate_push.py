@@ -18,11 +18,11 @@ def cli(parser=None):
 
 def main():
     from cluster_config.cdh.cluster import Cluster
-    from cluster_config import push
+    #from cluster_config import push
     from cluster_config.cli import parse
-    args = parse(push.cli())
+    args = parse(cli())
     cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
-    push.run(args, cluster)
+    run(args, cluster)
 
 
 def run(args, cluster=None):

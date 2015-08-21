@@ -148,7 +148,9 @@ class Cluster(object):
         """
         Restart the cluster and deploy configurations but only services with stale configurations.
         """
-        log.info("Restarting cluster : \"{0}\"".format(self.cluster.name))
+        log.info("Trying to restart cluster : \"{0}\"".format(self.cluster.name))
+        # TO DO: temporary fix for failure to restart CDH on new changes
+        time.sleep(10)
         self.cluster.restart(True, True)
         self.poll_commands("Restart")
 
