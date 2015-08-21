@@ -24,7 +24,7 @@ def cli(parser=None):
                         default=default_formula)
 
     parser.add_argument("--formula-args", type=str,
-                        help="formula arguments to possibly override constants.".
+                        help="formula arguments to possibly override constants in {0}.".
                         format(default_formula))
 
     return parser
@@ -55,10 +55,11 @@ def run(args, cluster=None, dt=None):
 
 def exec_formula(cluster, args):
     log.info("using formula: {0}".format(args.formula))
-
-    user_formula_args_path = file.file_path(cc.FORMULA_ARGS, args.path)
-    log.info("Reading CDH config file: {0}".format(user_formula_args_path))
-    user_formula_args = file.open_yaml_conf(user_formula_args_path)
+    user_formula_args = None
+    if args.formula_args:
+        user_formula_args_path = file.file_path(cc.FORMULA_ARGS, args.path)
+        log.info("Reading formula args config file: {0}".format(user_formula_args_path))
+        user_formula_args = file.open_yaml_conf(user_formula_args_path)
 
     #execute formula global variables
     vars = { "log": log, "kb_to_bytes": kb_to_bytes, "bytes_to_kb": bytes_to_kb, "mb_to_bytes": mb_to_bytes,
@@ -71,7 +72,7 @@ def exec_formula(cluster, args):
         constants = local["constants"](cluster, log)
         for member in constants:
             if hasattr(constants[member], '__call__'):
-                if member in user_formula_args:
+                if user_formula_args and member in user_formula_args:
                     if constants[member](user_formula_args[member]) != user_formula_args[member]:
                         log.warning("Formula arg value '{0}' was ignored using default '{1}'. Formula arg value must adhere to these rules {2}  ".format(user_formula_args[member],constants[member](user_formula_args[member]), inspect.getsource(constants[member])))
 

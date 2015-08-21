@@ -1,7 +1,10 @@
-# from cluster_config import log
-
 def constants(cluster, log):
-
+    """
+    Sets the constants needed for calculating the formula.
+    :param cluster: Cluster configuration connection
+    :param log: simple log interface with log.info, log.error, log.warning, log.fatal, log.debug
+    :return: a dictionary with all constants
+    """
     const = {
         "NUM_NM_WORKERS": len(cluster.yarn.nodemanager.hosts.all()),
         "NM_WORKER_CORES": cluster.yarn.nodemanager.hosts.max_cores(),
@@ -33,6 +36,13 @@ def constants(cluster, log):
 
 
 def formula(cluster, log, constants):
+    """
+    Houses the formula for calculating the optimized formula
+    :param cluster: Cluster configuration connection
+    :param  log: simple log interface with log.info, log.error, log.warning, log.fatal, log.debug
+    :param constants: the calculated constants with any user overrides from formula-args
+    :return: a dictionary with cdh and atk configurations
+    """
     cdh = {}
     atk = {}
 
