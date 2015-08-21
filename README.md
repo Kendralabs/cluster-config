@@ -14,9 +14,7 @@ The tool does 3 things:
 3. [cm-api](https://github.com/cloudera/cm_api) == 10.0.0
 4. Working CDH cluster for running the script
 
-installation
-***
-
+##installation
 
 Until the pip package is hosted, you will need to clone and install directly from source.
 
@@ -26,7 +24,6 @@ cd cluster-config
 [sudo] python setup.py install
 ```
 
-wiki docs
-***
+##wiki docs
 
 [Look over the repos wiki if you have any questions](../../wiki)
