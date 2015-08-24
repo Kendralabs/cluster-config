@@ -31,7 +31,6 @@ def run(args, cluster=None):
                 for config_group in cluster.services[service].roles[role].config_groups:
                     for config in cluster.services[service].roles[role].config_groups[config_group].configs:
                         print_details(cluster, config, service, role, config_group)
-        run_again()
 
     service_index = pick("cluster", "service", cluster.user_cluster_name, cluster.services)
 
