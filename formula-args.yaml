@@ -8,3 +8,4 @@ SPARK_DRIVER_MAXPERMSIZE: 512 # This is required for running in yarn-cluster mod
 YARN_SCHEDULER_MINIMUM_ALLOCATION_MB: 1024 # increase this in 512 increaments but usualy it should not be changed
 MAPREDUCE_MINIMUM_AM_MEMORY_MB: 4096 # increase this in 512 increaments to create larger containers
 MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB: 4096 # increase this in 512 increaments to create larger containers
+ENABLE_SPARK_SHUFFLE_SERVICE: false # Set this to "true" in order to enable this service for large workloads

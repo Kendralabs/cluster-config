@@ -19,7 +19,8 @@ def constants(cluster, log):
         "SPARK_DRIVER_MAXPERMSIZE": lambda x: x if x is not None and x >= 512 else 512,
         "YARN_SCHEDULER_MINIMUM_ALLOCATION_MB": lambda x: x if x is not None and x >= 1024 else 1024,
         "MAPREDUCE_MINIMUM_AM_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024,
-        "MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024
+        "MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024,
+        "ENABLE_SPARK_SHUFFLE_SERVICE": lambda x: x if str(x).lower() == "true" or str(x) == "false" else False
     }
 
     if (const["NM_WORKER_MEM"] < (const["MIN_NM_MEMORY"])):
@@ -51,7 +52,7 @@ def formula(cluster, log, constants):
         log.warning("Container larger than {0}MB are not supported".format(constants["MAX_JVM_MEMORY"]))
 
     if (constants["MEM_FRACTION_FOR_OTHER_SERVICES"] < 0 or (
-        constants["MEM_FRACTION_FOR_OTHER_SERVICES"] >= (1 - constants["MEM_FRACTION_FOR_HBASE"]))):
+                constants["MEM_FRACTION_FOR_OTHER_SERVICES"] >= (1 - constants["MEM_FRACTION_FOR_HBASE"]))):
         log.fatal("{0} must be non-nagative and smaller than {1}".format("MEM_FRACTION_FOR_OTHER_SERVICES",
                                                                          1 - constants["MEM_FRACTION_FOR_HBASE"]))
     constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_AM_MEMORY_MB"] * 0.07)
@@ -73,19 +74,10 @@ def formula(cluster, log, constants):
 
     cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_CPU_VCORES"] = 1
 
-    cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"] = \
-        "{0}\n{1}".format(
-            "<property><name>yarn.nodemanager.aux-services</name><value>spark_shuffle,mapreduce_shuffle</value></property>",
-            "<property><name>yarn.nodemanager.aux-services.spark_shuffle.class</name><value>org.apache.spark.network.yarn.YarnShuffleService</value></property>")
-    cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_CONFIG_SAFETY_VALVE"] = \
-        cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"]
-    cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.RESOURCEMANAGER_CONFIG_SAFETY_VALVE"] = \
-        cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"]
-
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_JOB_COUNTERS_LIMIT"] = constants["MAPREDUCE_JOB_COUNTERS_MAX"]
     cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"] = \
         "<property><name>mapreduce.job.counters.max</name><value>%d</value></property>" % (
-        constants["MAPREDUCE_JOB_COUNTERS_MAX"])
+            constants["MAPREDUCE_JOB_COUNTERS_MAX"])
     cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.RESOURCEMANAGER_MAPRED_SAFETY_VALVE"] = \
         cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_MAPRED_SAFETY_VALVE"]
     cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_MAPRED_SAFETY_VALVE"] = \
@@ -198,5 +190,29 @@ def formula(cluster, log, constants):
 
     atk["trustedanalytics.atk.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
         "\"-Xmx%sm\"" % (bytes_to_mb(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]))
+
+    atk["trustedanalytics.atk.engine.auto-partitioner.broadcast-join-threshold"] = "\"2048MB\""
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxResultSize"] = "\"2g\""
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.io.preferDirectBufs"] = "false"
+
+    if (constants["ENABLE_SPARK_SHUFFLE_SERVICE"]):
+        cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"] = \
+            "{0}\n{1}".format(
+                "<property>"
+                    "<name>""yarn.nodemanager.aux-services""</name>"
+                    "<value>""spark_shuffle,mapreduce_shuffle""</value>"
+                "</property>",
+                "<property>"
+                    "<name>yarn.nodemanager.aux-services.spark_shuffle.class</name>"
+                    "<value>""org.apache.spark.network.yarn.YarnShuffleService</value>"
+                "</property>")
+        cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_CONFIG_SAFETY_VALVE"] = \
+            cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"]
+        cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.RESOURCEMANAGER_CONFIG_SAFETY_VALVE"] = \
+            cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"]
+
+        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.service.enabled"] = "true"
+    else:
+        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.service.enabled"] = "false"
 
     return {"cdh": cdh, "atk": atk}
