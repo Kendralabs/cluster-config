@@ -55,11 +55,14 @@ class Hosts(object):
             cores = cores + self.hosts[key].numPhysicalCores
         return cores
 
-    def all(self):
-        nodes = {}
-        for key in self.hosts:
-            nodes[self.hosts[key].hostname] = self.hosts[key]
+    def hostnames(self):
+        nodes = []
+        for host in self.hosts:
+            nodes.append(self.hosts[host].hostname)
         return nodes
+
+    def all(self):
+        return self.hosts
 
     @property
     def cdh_resource_root(self):
