@@ -17,10 +17,11 @@ def constants(cluster, log):
         "MEM_FRACTION_FOR_OTHER_SERVICES": lambda x: x if x is not None and x >= 0 and x < 1 else 0.125,
         "MAPREDUCE_JOB_COUNTERS_MAX": lambda x: x if x is not None and x >= 120 else 500,
         "SPARK_DRIVER_MAXPERMSIZE": lambda x: x if x is not None and x >= 512 else 512,
+        "ENABLE_SPARK_SHUFFLE_SERVICE": lambda x: x if str(x).lower() == "true" or str(x) == "false" else False,
+        "ZOOKEEPER_IS_EXTERNAL": lambda x: x if str(x).lower() == "true" or str(x) == "false" else True,
         "YARN_SCHEDULER_MINIMUM_ALLOCATION_MB": lambda x: x if x is not None and x >= 1024 else 1024,
         "MAPREDUCE_MINIMUM_AM_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024,
-        "MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024,
-        "ENABLE_SPARK_SHUFFLE_SERVICE": lambda x: x if str(x).lower() == "true" or str(x) == "false" else False
+        "MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024
     }
 
     if (const["NM_WORKER_MEM"] < (const["MIN_NM_MEMORY"])):
@@ -59,11 +60,13 @@ def formula(cluster, log, constants):
     constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"] * 0.07)
 
     ###### These values are gathered by the tool from Cluster ######
+    if (constants["ZOOKEEPER_IS_EXTERNAL"]):
+        atk["trustedanalytics.atk.engine.giraph.giraph.zkIsExternal"] = "true"
+        ZK_LIST = map(lambda x: x.hostname, cluster.zookeeper.server.hosts.all().values())
+        atk["trustedanalytics.atk.engine.giraph.giraph.zkList"] = "\"%s\"" %(",".join(ZK_LIST))
+
     atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
         "\"%dm\"" % (constants["SPARK_DRIVER_MAXPERMSIZE"])
-
-    constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_AM_MEMORY_MB"] * 0.07)
-    constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"] * 0.07)
 
     atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
         "\"%d\"" % (constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"])
@@ -89,7 +92,7 @@ def formula(cluster, log, constants):
     MEM_PER_NM = constants["NM_WORKER_MEM"] - MEM_FOR_OTHER_SERVICES - MEM_FOR_HBASE_REGION_SERVERS
 
     cdh["HBASE.REGIONSERVER.REGIONSERVER_BASE.HBASE_REGIONSERVER_JAVA_HEAPSIZE"] = \
-        int(MEM_FOR_HBASE_REGION_SERVERS / constants["OVER_COMMIT_FACTOR"])
+        int(MEM_FOR_HBASE_REGION_SERVERS * 0.75)
 
     cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.YARN_SCHEDULER_INCREMENT_ALLOCATION_MB"] = 512
 
@@ -128,7 +131,7 @@ def formula(cluster, log, constants):
         )
 
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"] = \
-        mb_to_bytes(int(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] / constants["OVER_COMMIT_FACTOR"]))
+        mb_to_bytes(int(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] * 0.75))
 
     cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_REDUCE_JAVA_OPTS_MAX_HEAP"] = \
         2 * cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]
@@ -144,7 +147,7 @@ def formula(cluster, log, constants):
 
     cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_MAX_HEAP"] = \
         mb_to_bytes(
-            int(cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] / constants["OVER_COMMIT_FACTOR"]))
+            int(cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] * 0.75))
 
     CONTAINERS_ACCROSS_CLUSTER = \
         cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_MEMORY_MB"] \
@@ -168,11 +171,16 @@ def formula(cluster, log, constants):
 
     log.info("{0} could be as large as {1} for multi-tenacty".format("NUM_THREADS", (CONTAINERS_ACCROSS_CLUSTER / 2)))
 
+
+
     atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"] = \
         int((CONTAINERS_ACCROSS_CLUSTER - constants["NUM_THREADS"]) / constants["NUM_THREADS"])
 
     atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.memory"] = \
-        "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"])
+        "\"%dm\"" % (
+            cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] -
+            int(atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"].strip("\""))
+        )
 
     atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.cores"] = \
         (cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] * constants["NUM_NM_WORKERS"] -
@@ -180,13 +188,16 @@ def formula(cluster, log, constants):
         / (constants["NUM_THREADS"] * atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"])
 
     atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.memory"] = \
-        "\"%dm\"" % (cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"])
+        "\"%dm\"" % (
+            cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] -
+            int(atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"].strip("\""))
+        )
 
     atk["trustedanalytics.atk.engine.giraph.mapreduce.map.memory.mb"] = \
         cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
 
     atk["trustedanalytics.atk.engine.giraph.giraph.maxWorkers"] = \
-        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"]
+        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.numExecutors"] - 1
 
     atk["trustedanalytics.atk.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
         "\"-Xmx%sm\"" % (bytes_to_mb(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]))
@@ -199,12 +210,12 @@ def formula(cluster, log, constants):
         cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"] = \
             "{0}\n{1}".format(
                 "<property>"
-                    "<name>""yarn.nodemanager.aux-services""</name>"
-                    "<value>""spark_shuffle,mapreduce_shuffle""</value>"
+                "<name>""yarn.nodemanager.aux-services""</name>"
+                "<value>""spark_shuffle,mapreduce_shuffle""</value>"
                 "</property>",
                 "<property>"
-                    "<name>yarn.nodemanager.aux-services.spark_shuffle.class</name>"
-                    "<value>""org.apache.spark.network.yarn.YarnShuffleService</value>"
+                "<name>yarn.nodemanager.aux-services.spark_shuffle.class</name>"
+                "<value>""org.apache.spark.network.yarn.YarnShuffleService</value>"
                 "</property>")
         cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.NODEMANAGER_CONFIG_SAFETY_VALVE"] = \
             cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"]
@@ -214,5 +225,7 @@ def formula(cluster, log, constants):
         atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.service.enabled"] = "true"
     else:
         atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.service.enabled"] = "false"
+
+    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.am.waitTime"] = "1000000"
 
     return {"cdh": cdh, "atk": atk}
