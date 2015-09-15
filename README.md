@@ -1,12 +1,12 @@
 cluster_config
 ==========
-he cluster configuration tool allows easy updating and optimization of any CDH cluster from the command line. With the use of optimization formulas you can have an optimized CDH cluster in a matter of seconds.
+The cluster configuration tool allows easy updating and optimization of any CDH cluster from the command line. With the use of optimization formulas you can have an optimized CDH cluster in a matter of seconds.
 
 The tool does 3 things:
 
-1. Generate optimized configurations based on your cluster hardware
-2. Easy updating, restarting, and configuration deployment of CDH services
-3. Simple exploration of CDH cluster configurations
+1. Generates optimized configurations based on your cluster hardware
+2. Automates updating, restarting, and configuration deployment of CDH services
+3. Simplifies exploration of CDH cluster configurations
 
 ##Requirements
 1. Python 2.7
@@ -27,3 +27,4 @@ cd cluster-config
 ##wiki docs
 
 [Look over the repos wiki if you have any questions](../../wiki)
+

@@ -1,3 +1,11 @@
 *.iml
 .idea
 *.pyc
+ALL-CLUSTER-CONFIGURATIONS.json
+cdh.json
+generated.conf
+cluster_config.egg-info/
+dist/
+localhost*/
+build/
+formula-args.yaml
