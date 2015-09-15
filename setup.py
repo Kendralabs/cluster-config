@@ -19,7 +19,7 @@ setup(
     name="cluster_config",
 
     # Version number (initial):
-    version=u"0.1.0-{0}".format(os.environ.get("BUILD_NUMBER")) if os.environ.get("BUILD_NUMBER") else u"0.1.0",
+    version=u"0.1.0-{0}".format(os.environ.get("BUILD_NUMBER")) if os.environ.get("BUILD_NUMBER") else u"0",
 
     # Application author details:
     author="Intel",
