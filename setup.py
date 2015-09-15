@@ -3,15 +3,14 @@ import os
 try:
     from setuptools import setup
     extra = dict(entry_points={
-           #'paste.app_factory': ['main=pypiserver:paste_app_factory'],
-            'console_scripts': ['cluster-config=cluster_config.config:main',
-                                'cluster-generate=cluster_config.auto_config:main',
-                               'cluster-explore=cluster_config.explore:main',
-                                'cluster-push=cluster_config.push:main']
+            'console_scripts': ['cluster-explore=cluster_config.explore:main',
+                                'cluster-generate=cluster_config.generate:main',
+                                'cluster-push=cluster_config.push:main',
+                                'cluster-generate-push=cluster_config.generate_push:main']
             })
 except ImportError:
     from distutils.core import setup
-    extra = dict(scripts=["cluster-config","cluster-generate","cluster-explore", "cluster-push"])
+    extra = dict(scripts=["cluster-explore","cluster-generate","cluster-push", "cluster-generate-push"])
 
 
 
