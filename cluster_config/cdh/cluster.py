@@ -5,7 +5,7 @@ from urllib2 import URLError
 from cluster_config.cdh.service import Service
 from cluster_config import log
 from cluster_config.file import file_path, write_json_conf
-from cluster_config import ALL_CLUSTER_CONFIGS
+from cluster_config import CDH_CLUSTER_CONFIGS
 
 
 class Cluster(object):
@@ -219,9 +219,9 @@ class Cluster(object):
 
 def save_config(cluster, path, name=None):
     if name is None:
-        name = ALL_CLUSTER_CONFIGS
+        name = CDH_CLUSTER_CONFIGS
     else:
-        name = "{0}-{1}".format(name, ALL_CLUSTER_CONFIGS)
+        name = "{0}-{1}".format(name, CDH_CLUSTER_CONFIGS)
     cdh_json_path = file_path(name, path)
     write_json_conf(json(cluster), cdh_json_path)
     return cdh_json_path
