@@ -9,6 +9,6 @@ ENABLE_SPARK_SHUFFLE_SERVICE: true # Set this to "true" in order to enable this 
 ZOOKEEPER_IS_EXTERNAL: true # Set this to "false" in order to run Zookeeper in local mode
 
 NUM_THREADS: 1  # This should be set to the maximum number of munti-tenant users
-MAPREDUCE_MINIMUM_AM_MEMORY_MB: 8192 # increase this in 512 increaments to create larger containers
-MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB: 8192 # increase this in 512 increaments to create larger containers
+MAPREDUCE_MINIMUM_AM_MEMORY_MB: 4096 # increase this in 512 increaments to create larger containers
+MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB: 4096 # increase this in 512 increaments to create larger containers
 ENABLE_DYNAMIC_ALLOCATION_FOR_SPARK: true # set this to false in order to disable SPARK dynamic allocation 
