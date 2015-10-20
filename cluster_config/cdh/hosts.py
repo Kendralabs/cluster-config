@@ -63,8 +63,8 @@ class Hosts(object):
 
     def ipAddresses(self):
         ips = []
-        for key in self.hosts:
-            ips.append(key.ipAddress)
+        for host in self.hosts:
+            ips.append(self.hosts[host].ipAddress)
         return ips
 
     def all(self):
