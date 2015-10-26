@@ -4,3 +4,4 @@ include cluster-explore
 include cluster-config
 include cluster-push
 include README.md
+include formula-args.yml.tpl
