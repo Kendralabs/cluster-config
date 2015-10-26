@@ -61,6 +61,12 @@ class Hosts(object):
             nodes.append(self.hosts[host].hostname)
         return nodes
 
+    def ipAddresses(self):
+        ips = []
+        for host in self.hosts:
+            ips.append(self.hosts[host].ipAddress)
+        return ips
+
     def all(self):
         return self.hosts
 
