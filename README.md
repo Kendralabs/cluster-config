@@ -19,7 +19,7 @@ The tool does 3 things:
 Until the pip package is hosted, you will need to clone and install directly from source.
 
 ```
-git clone git@github.intel.com:gao/cluster-config.git
+git clone git@github.com:trustedanalytics/cluster-config.git
 cd cluster-config
 [sudo] python setup.py install
 ```
