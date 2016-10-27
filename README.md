@@ -12,7 +12,7 @@ The tool does 3 things:
 1. Python 2.7
 2. [argparse](https://docs.python.org/2.7/library/argparse.html) >= 1.3.0
 3. [cm-api](https://github.com/cloudera/cm_api) >= 9.0.0,<=12.0.0
-4. [argparse](http://pyyaml.org/) >= 3.11
+4. [PyYaml](http://pyyaml.org/) >= 3.11
 5. Working CDH cluster for running the script
 
 ##installation
