@@ -11,8 +11,9 @@ The tool does 3 things:
 ##Requirements
 1. Python 2.7
 2. [argparse](https://docs.python.org/2.7/library/argparse.html) >= 1.3.0
-3. [cm-api](https://github.com/cloudera/cm_api) == 10.0.0
-4. Working CDH cluster for running the script
+3. [cm-api](https://github.com/cloudera/cm_api) >= 9.0.0,<=12.0.0
+4. [argparse](http://pyyaml.org/) >= 3.11
+5. Working CDH cluster for running the script
 
 ##installation
 
