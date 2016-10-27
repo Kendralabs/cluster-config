@@ -110,7 +110,7 @@ def save_atk_configuration(vars, args):
     if len(vars["atk"]) > 0:
         path = file.file_path(cc.ATK_CONFIG, args.path)
         f = open(path, "w+")
-        for key in vars["atk"]:
+        for key in sorted(vars["atk"].iterkeys()):
             print("{0}={1}".format(key, vars["atk"][key]), file=f)
         f.close()
         log.info("Wrote ATK generated configuration file to: {0}".format(path))
