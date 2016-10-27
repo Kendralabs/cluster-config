@@ -61,11 +61,6 @@ def formula(cluster, log, constants):
     constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"] * 0.07)
 
     ###### These values are gathered by the tool from Cluster ######
-    if (constants["ZOOKEEPER_IS_EXTERNAL"]):
-        atk["trustedanalytics.atk.engine.giraph.giraph.zkIsExternal"] = "true"
-        ZK_LIST = map(lambda x: x.hostname, cluster.zookeeper.server.hosts.all().values())
-        atk["trustedanalytics.atk.engine.giraph.giraph.zkList"] = "\"%s\"" % (",".join(ZK_LIST))
-
     atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
         "\"%dm\"" % (constants["SPARK_DRIVER_MAXPERMSIZE"])
 
@@ -206,15 +201,6 @@ def formula(cluster, log, constants):
             cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] -
             int(atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"].strip("\""))
         )
-
-    atk["trustedanalytics.atk.engine.giraph.mapreduce.map.memory.mb"] = \
-        cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"]
-
-    atk["trustedanalytics.atk.engine.giraph.giraph.maxWorkers"] = \
-        EXECUTORS_PER_THREAD - 1
-
-    atk["trustedanalytics.atk.engine.giraph.mapreduce.map.java.opts.max.heap"] = \
-        "\"-Xmx%sm\"" % (bytes_to_mb(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]))
 
     atk["trustedanalytics.atk.engine.auto-partitioner.broadcast-join-threshold"] = "\"2048MB\""
 
