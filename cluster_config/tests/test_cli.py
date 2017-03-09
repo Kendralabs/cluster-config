@@ -1,10 +1,11 @@
-import unittest
-import logging
-from mock import MagicMock
-import mock as mock
 import argparse
-from cluster_config import cli
-from cluster_config import log
+import logging
+import unittest
+
+import mock as mock
+from mock import MagicMock
+
+from cluster_config.utils import log, cli
 
 
 class TestCli(unittest.TestCase):

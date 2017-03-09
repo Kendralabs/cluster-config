@@ -1,29 +1,29 @@
-from cluster_config.cdh.config_group import Config_Group
-from cluster_config.cdh.hosts import Hosts
 from cm_api.endpoints import role_config_groups
-from cluster_config import log
+
+from cluster_config.cdh.config_group import Config_Group
+from cluster_config.cdh import CDH
+from cluster_config.cdh.hosts import Hosts
+from cluster_config.utils import log
 
 
-class Role(object):
-    def __init__(self, cdh_resource_root, cdh_cluster, cdh_service, cdh_role, cdh_role_type=None, cdh_role_name=None, active=True):
-        #save are cloudera manager resource root reference
-        self.cdh_resource_root = cdh_resource_root
-        #cdh cluster object
-        self.cdh_cluster = cdh_cluster
-        #cdh service object
-        self.cdh_service = cdh_service
-        #cdh role object
+class Role(CDH):
+    def __init__(self, cdh, cdh_role, cdh_role_type=None, cdh_role_name=None, active=True):
+        super(Role, self).set_resources(cdh)
+
         self._cdh_roles = {}
-        #config groups for the role
+        '''cdh role object'''
+
         self._config_groups = {}
-        #list of hosts the role is installed on
+        '''config groups for the role'''
+
         self._hosts = None
+        '''list of hosts the role is installed on'''
 
-
-        #store the type of the roles
         self._type = None
+        '''type of role'''
 
         self.active = active
+        '''wather or not the role is active, if a role doesn't have a host assigne it will not be active'''
 
         if cdh_role_type:
             self.type = cdh_role_type
@@ -41,19 +41,31 @@ class Role(object):
         self.__get_all_config_groups()
 
     def __get_all_config_groups(self):
-        for group in role_config_groups.get_all_role_config_groups(self.cdh_resource_root, self.cdh_service.name, self.cdh_cluster.name):
+        '''
+        Get all configuration groups for the role
+
+        '''
+        for group in role_config_groups.get_all_role_config_groups(self.cmapi_resource_root, self.cmapi_service.name, self.cmapi_cluster.name):
             if group.roleType == self.type:
-                config_group = Config_Group(self.cdh_service, group)
+                config_group = Config_Group(self.cmapi_service, group)
                 setattr(self, config_group.name, config_group)
                 self.config_groups[config_group.key] = config_group
 
 
     def add(self, cdh_role):
+        '''
+        add more host's to this role
+        :param cdh_role: cmapi role object from a particular host
+        '''
         if cdh_role.type == self.type:
             self.cdh_roles[cdh_role.name] = cdh_role
             self.__get_host(cdh_role)
 
     def __get_host(self, role):
+        '''
+        Get host details for the role
+        :param role: cmapi role object
+        '''
         if self.hosts:
             self.hosts.add(role.hostRef.hostId)
         else:
@@ -71,14 +83,14 @@ class Role(object):
 
 
     def get_role_names(self):
-        """
+        '''
         Get all the role names. this is used when deploying configurations after updates. The role names are very long and
         look like this 'spark-SPARK_WORKER-207e4bfb96a401eb77c8a78f55810d31'. Used by the Cloudera api to know where the
         config is going to get deployed
 
         :param roles: list of roles from a service. example SPARK_WORKER, SPARK_MASTER
         :return: only the service names. will list of something like this 'spark-SPARK_WORKER-207e4bfb96a401eb77c8a78f'
-        """
+        '''
         temp = []
         for role in self.cdh_roles:
             if self.cdh_roles[role] and self.cdh_roles[role].hostRef:
@@ -100,30 +112,6 @@ class Role(object):
     @property
     def name(self):
         return self.type.lower()
-
-    @property
-    def cdh_resource_root(self):
-        return self._cdh_resource_root
-
-    @cdh_resource_root.setter
-    def cdh_resource_root(self, cdh_resource_root):
-        self._cdh_resource_root = cdh_resource_root
-
-    @property
-    def cdh_cluster(self):
-        return self._cdh_cluster
-
-    @cdh_cluster.setter
-    def cdh_cluster(self, cdh_cluster):
-        self._cdh_cluster = cdh_cluster
-
-    @property
-    def cdh_service(self):
-        return self._cdh_service
-
-    @cdh_service.setter
-    def cdh_service(self, cdh_service):
-        self._cdh_service = cdh_service
 
     @property
     def cdh_roles(self):

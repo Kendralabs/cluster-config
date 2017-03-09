@@ -22,8 +22,6 @@ setup(
     version=u"0.1.0-{0}".format(os.environ.get("BUILD_NUMBER")) if os.environ.get("BUILD_NUMBER") else u"0",
 
     # Application author details:
-    author="Intel",
-    author_email="bleh@intel.com",
 
     # Packages
     packages=["cluster_config","cluster_config/cdh","cluster_config/tests"],
@@ -32,10 +30,10 @@ setup(
     include_package_data=True,
 
     # Details
-    url="https://analyticstoolkit.intel.com",
+    #url="https://analyticstoolkit.intel.com",
 
     #
-    license="LICENSE.txt",
+    license="Apache 2.0",
     description="big data cluster configuration tool",
 
     long_description=open("README.md").read(),

@@ -1,7 +1,9 @@
-from cluster_config import file
-from cluster_config import dict
-from cluster_config import log
-from cluster_config import cli
+#provide pdoc html
+
+from cluster_config.utils import cli
+from cluster_config.utils import file
+from cluster_config.utils import log
+from cluster_config.utils import dict, file, log, cli
 
 #the hocon file extension https://github.com/typesafehub/config/blob/master/HOCON.md
 HOCON_EXT = "conf"

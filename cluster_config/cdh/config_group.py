@@ -1,6 +1,7 @@
 import re
+
+import cluster_config.utils.log as log
 from cluster_config.cdh.config import Config
-import cluster_config.log as log
 
 
 class Config_Group(object):

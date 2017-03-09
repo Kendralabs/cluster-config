@@ -1,6 +1,5 @@
 from cm_api.endpoints import hosts
 
-
 class Hosts(object):
     def __init__(self, cdh_resource_root, hostId):
         self._cdh_resource_root = None
@@ -23,6 +22,7 @@ class Hosts(object):
                     max = self.hosts[host].numCores
         return max
 
+    #TODO: no params = property
     def max_memory(self):
         max = 0
         for host in self.hosts:
