@@ -6,9 +6,9 @@ def constants(cluster, log):
     :return: a dictionary with all constants
     '''
     const = {
-        "NUM_NM_WORKERS": len(cluster.yarn.nodemanager.hosts.all()),
+        "NUM_NM_WORKERS": len(cluster.yarn.nodemanager.hosts.all),
         "NM_WORKER_CORES": cluster.yarn.nodemanager.hosts.max_cores(),
-        "NM_WORKER_MEM": cluster.yarn.nodemanager.hosts.max_memory(),
+        "NM_WORKER_MEM": cluster.yarn.nodemanager.hosts.max_memory,
         "MIN_NM_MEMORY": gb_to_bytes(8),
         # lambdas are cleaner
         "OVER_COMMIT_FACTOR": lambda x: x if x is not None and x >= 1 else 1,

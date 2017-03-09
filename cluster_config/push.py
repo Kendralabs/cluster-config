@@ -25,7 +25,7 @@ def cli(parser=None):
 
 
 def main():
-    run(cluster_config.utils.cli.parse(cli()))
+    run(cc.utils.cli.parse(cli()))
 
 
 def run(args, cluster=None, dt=None):
@@ -47,7 +47,7 @@ def run(args, cluster=None, dt=None):
         if user_configs:
             #merge config dictionaries and resolve conflicts
             log.info("conflict resolution: {0}".format(args.conflict_merge))
-            configs = cluster_config.utils.dict.merge_dicts(user_configs, cdh_configs, convert_conflict_merge(args.conflict_merge))
+            configs = cc.utils.dict.merge_dicts(user_configs, cdh_configs, convert_conflict_merge(args.conflict_merge))
             merged_config_path = file.file_path(cc.MERGED_CDH_CONFIG, args.path)
             log.info("Writting merged CDH config file: {0}".format(merged_config_path))
             file.write_json_conf(configs, merged_config_path)

@@ -34,11 +34,13 @@ class Service(CDH):
         return Role(self, role, role_type, role_name, active)
 
     def _get_roles(self):
+        '''
+        Get all the roles for this service including the ones not assigned to a host
+        '''
 
         #get all roles assigned to hosts
         #a role type will have mulitple hosts
         for role in self._get_cdh_roles():
-            print role.type
             if hasattr(self, role.type.lower()):
                 getattr(self, role.type.lower()).add(role)
             else:

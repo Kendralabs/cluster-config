@@ -47,7 +47,7 @@ class Role(CDH):
         '''
         for group in role_config_groups.get_all_role_config_groups(self.cmapi_resource_root, self.cmapi_service.name, self.cmapi_cluster.name):
             if group.roleType == self.type:
-                config_group = Config_Group(self.cmapi_service, group)
+                config_group = Config_Group(self, group)
                 setattr(self, config_group.name, config_group)
                 self.config_groups[config_group.key] = config_group
 
@@ -69,7 +69,7 @@ class Role(CDH):
         if self.hosts:
             self.hosts.add(role.hostRef.hostId)
         else:
-            self.hosts = Hosts(self.cdh_resource_root, role.hostRef.hostId)
+            self.hosts = Hosts(self, role.hostRef.hostId)
 
     def set(self, configs):
         updated = {}

@@ -10,7 +10,6 @@ class CDH(object):
     '''
 
 
-
     def __init__(self, host, port, username, password):
         self.cmapi_resource_root = None
         self.get_api_resource(host, port, username, password)
