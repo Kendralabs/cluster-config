@@ -42,9 +42,7 @@ def run(args, cluster=None, dt=None):
 
         cdh_config_path = save_cdh_configuration(vars, args)
 
-        atk_config_path = save_atk_configuration(vars, args)
-
-        file.snapshots(args.host, "generate", args.path, dt, cdh_config_path, atk_config_path, cluster_config_json_path,
+        file.snapshots(args.host, "generate", args.path, dt, cdh_config_path, cluster_config_json_path,
                        args.formula, args.formula_args)
     else:
         cc.utils.log.fatal("Formula file must be specified")
@@ -101,20 +99,6 @@ def save_cdh_configuration(vars, args):
         return path
     else:
         log.warning("No CDH configurations to save.")
-        return None
-
-#TODO: take out atk func
-def save_atk_configuration(vars, args):
-    if len(vars["atk"]) > 0:
-        path = file.file_path(cc.ATK_CONFIG, args.path)
-        f = open(path, "w+")
-        for key in sorted(vars["atk"].iterkeys()):
-            print("{0}={1}".format(key, vars["atk"][key]), file=f)
-        f.close()
-        log.info("Wrote ATK generated configuration file to: {0}".format(path))
-        return path
-    else:
-        log.warning("No ATK configurations to save")
         return None
 
 
