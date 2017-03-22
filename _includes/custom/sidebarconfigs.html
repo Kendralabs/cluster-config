@@ -10,6 +10,9 @@
 {% elsif page.sidebar == "mydoc_sidebar" %}
 {% assign sidebar = site.data.sidebars.mydoc_sidebar.entries %}
 
+{% elsif page.sidebar == "cluster_config_sidebar" %}
+{% assign sidebar = site.data.sidebars.cluster_config_sidebar.entries %}
+
 {% else %}
 {% assign sidebar = site.data.sidebars.home_sidebar.entries %}
 {% endif %}
@@ -22,6 +25,10 @@ sidebar configuration for print files
 
 {% if site.product == "mydoc" %}
 {% assign sidebar_pdf = site.data.sidebars.mydoc_sidebar.entries %}
+{% endif %}
+
+{% if site.product == "cluster_config" %}
+{% assign sidebar_pdf = site.data.sidebars.cluster_config.entries %}
 {% endif %}
 
 {% if site.product == "product1" %}

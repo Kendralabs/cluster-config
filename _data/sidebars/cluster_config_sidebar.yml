@@ -1,0 +1,84 @@
+# This is your sidebar TOC. The sidebar code loops through sections here and provides the appropriate formatting.
+
+entries:
+- title: sidebar
+  product: Cluster-config
+  version: 0.1.0
+  folders:
+
+  - title:
+    output: pdf
+    type: frontmatter
+    folderitems:
+    - title:
+      url: /titlepage
+      output: pdf
+      type: frontmatter
+    - title:
+      url: /tocpage
+      output: pdf
+      type: frontmatter
+
+  - title: Overview
+    output: web, pdf
+    folderitems:
+
+    - title: What is Cluster-config?
+      url: /index.html
+      output: web, pdf
+      type: homepage
+
+    - title: Features
+      url: /cluster_config_supported_features.html
+      output: web, pdf
+
+    - title: Support & Feedback
+      url: /cluster_config_support.html
+      output: web, pdf
+
+  - title: Installation
+    output: web, pdf
+    folderitems:
+    
+    - title: Requirements
+      url: /cluster_config_requirements.html
+      output: web, pdf
+
+    - title: Git & Pip
+      url: /cluster_config_install.html
+      output: web, pdf
+
+  - title: CLI
+    url: /cluster_config_cli.html
+    output: web, pdf
+    folderitems:
+    
+    - title: Common Options
+      url: /cluster_config_cli_common.html
+      output: web, pdf
+
+    - title: Cluster Generate
+      url: /cluster_config_generate.html
+      output: web, pdf
+
+    - title: Cluster Push
+      url: /cluster_config_push.html
+      output: web, pdf
+
+    - title: Cluster Explore
+      url: /cluster_config_explore.html
+      output: web, pdf
+
+    - title: Cluster Generate Push
+      url: /cluster_config_gen_push.html
+      output: web, pdf
+
+  - title: Formulas
+    output: web, pdf
+
+    folderitems:
+    - title: Creating
+      url: /cluster_config_formula.html
+      output: web, pdf
+
+    

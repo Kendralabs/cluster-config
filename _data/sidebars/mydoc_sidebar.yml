@@ -23,22 +23,18 @@ entries:
     output: web, pdf
     folderitems:
 
-    - title: Get started
+    - title: What is Cluster-config?
       url: /index.html
       output: web, pdf
       type: homepage
 
-    - title: Introduction
-      url: /mydoc_introduction.html
-      output: web, pdf
-
-    - title: Supported features
+    - title: Features
       url: /mydoc_supported_features.html
       output: web, pdf
-
-    - title: About the theme author
-      url: /mydoc_about.html
-      output: web, pdf
+      
+    - title: Architecture
+      url: /mydoc_introduction.html
+      output: web, pdf      
 
     - title: Support
       url: /mydoc_support.html
