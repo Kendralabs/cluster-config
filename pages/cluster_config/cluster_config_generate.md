@@ -4,7 +4,7 @@ tags: [generate]
 keywords: generate
 last_updated: March 17, 2017
 datatable: true
-summary: "cluster generate will create optimized configurations and save to a json file"
+summary: "cluster generate creates optimized configurations and saves them to a JSON file"
 sidebar: cluster_config_sidebar
 permalink: cluster_config_generate.html
 folder: cluster_config
@@ -12,14 +12,14 @@ folder: cluster_config
 
 ## Purpose
 
-The cluster-generate command will allow you to create optimized configurations. The resulting configuration will be save to the local filesystem for review.
+The cluster-generate command allows you to create optimized configurations. The resulting configuration is saved to the local filesystem for review.
 
 Saving the optimized configurations is invaluable when developing a new formula and when modifying the behavior of the formula with its parameters.
 
 
 ## Command line options
 
-Here are command line options for cluster-generate.
+Here are command line options for cluster-generate:
 
 ```shell
 $ cluster-generate --help
@@ -57,17 +57,17 @@ Optional arguments:
 
 **cluster-generate** only has two unique options
  
- * 	**formula** path to formula file if not using the default packaged formula.
- *  **formula-args** path to formula arguments to tweak some of the formulas output.
+ * 	**formula** path to formula file if not using the default packaged formula
+ *  **formula-args** path to formula arguments to tweak some of the formulas output
 
 
 ## Examples
 
 ### Execution phases
 
-The important phases in the running of a cluster generate script are
+The important phases in the running of a cluster generate script are:
 
- * Acquiring Cloudera manager connection
+ * Acquiring a Cloudera Manager connection
  * Retrieving all the configurations for every service
  * Running the formula
  * Saving the calculated configuration
@@ -78,7 +78,7 @@ The important phases in the running of a cluster generate script are
 
 ### Running with minimal options
 
-This sample command runs cluster-generate with default parameters.
+This sample command runs cluster-generate with default parameters:
 
 
 ```
@@ -102,13 +102,13 @@ What is the Cloudera manager password?
 ```
 What is the Cloudera manager password? 
 ```
-Before any connection to Cloudera manager you will be prompted for a password if one was not provided on the command line.
+Before connecting to Cloudera Manager, you will be prompted for a password if one was not provided on the command line.
 
 #### Formula logs
 ```
 --INFO NUM_THREADS could be as large as 42 for multi-tenacty
 ```
-You can get log message from the formula. In this case it's a tip but they can also be errors.
+You can get log messages from the formula. In this case it's a tip, but they can also be error messages.
 
 
 #### Saving the calculated configurations
@@ -125,7 +125,7 @@ The optimized configurations are saved to **_cdh.json_** to allow users to view 
 --INFO Snapshotting: formula.py 
 ```
 
-For auditing purposes many files will be saved in a snapshots folder.
+For auditing purposes, many files will be saved in a snapshots folder.
 
  * The calculated configurations, cdh.json.
  * All CDH configurations, before-ALL-CLUSTER-CONFIGURATIONS.json.
@@ -134,7 +134,7 @@ For auditing purposes many files will be saved in a snapshots folder.
 
 ### Specify formula arguments
 
-The most common option that will be passed to cluster-generate will be the formula-args.yaml file.
+The most common option to be passed to **cluster-generate** will be the formula-args.yaml file.
 
 An example formula arguments file  for the default formula can be found in the [repository](https://github.com/tapanalyticstoolkit/cluster-config/formula-args.yaml.tpl).
 
@@ -155,9 +155,9 @@ MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB: 4096 # increase this in 512 increaments to
 ENABLE_DYNAMIC_ALLOCATION_FOR_SPARK: true # set this to false in order to disable SPARK dynamic allocation 
 ```
 
-The formula arguments file lets users change how the furmula calculates optimized configurations.
+The formula arguments file lets users change how the formula  calculates optimized configurations.
 
-Let’s update MEM_FRACTION_FOR_HBASE. We are going to lower the amount of memory allocated to HBASE because our jobs will not use it and we would rather have the extra memory allocated to YARN. Let’s reduce the value to 10% and run cluster-generate again.
+Let’s update MEM_FRACTION_FOR_HBASE to lower the amount of memory allocated to HBASE, because our jobs will not use it and we would rather have the extra memory allocated to YARN. Let’s reduce the value to 10% and run cluster-generate again.
 
 ```
 # User defined parameters, please don't modify unless you are an advanced user
@@ -179,7 +179,7 @@ ENABLE_DYNAMIC_ALLOCATION_FOR_SPARK: true # set this to false in order to disabl
 
 The options in the formula arguments file are entirely up to the author of the formula and the options they think should be modified.
 
-To provide a formula-args.yaml file simply provide the path to the file.
+To provide a formula-args.yaml  file to the tool, simply provide the path to the file.
 
 
 ```
@@ -202,8 +202,8 @@ Not much changed from the last time we ran cluster-generate.
 
 The only differences are the two extra messages involving loading and snapshot of formula-args.yaml
 
-Two see the changes in the configuration you will need to diff cdh.json with a previous run.
-In this diff you can clearly see memory being removed from ‘HBASE_REGIONSERVER_JAVA_HEAPSIZE’ and the resulting memory being added to the various yarn configurations.
+To see the changes in the configuration, you will need to diff cdh.json with a previous run.
+In this diff, you can clearly see memory being removed from ‘HBASE_REGIONSERVER_JAVA_HEAPSIZE’ and the resulting memory being added to the various YARN configurations.
 
 ```
 <     "HBASE_REGIONSERVER_JAVA_HEAPSIZE": 25331261952

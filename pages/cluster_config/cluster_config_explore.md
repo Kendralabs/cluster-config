@@ -4,7 +4,7 @@ tags: [explore]
 keywords: explore
 last_updated: March 21, 2017
 datatable: true
-summary: "cluster explore will set all the calculated optimized configurations in cloudera manager."
+summary: "cluster explore sets all the calculated optimized configurations in Cloudera Manager."
 sidebar: cluster_config_sidebar
 permalink: cluster_config_explore.html
 folder: cluster_config
@@ -16,7 +16,7 @@ The cluster-explore command enables quick searching of Cloudera service configur
 
 ## Command line options
 
-Here are command line options for cluster-explore.
+Here are command line options for cluster-explore:
 
 ```shell
 cluster-explore --help
@@ -45,12 +45,12 @@ optional arguments:
 
 ### Unique Options
 
-**cluster-explore** has one unique option
+**cluster-explore** has the following unique option:
  
- * **--dump**: will output all configurations for every service to standard out allowing to pipe out to the CLI tool of your choosing. 
+ * **--dump**: outputs all configurations for every service to standard out allowing to pipe out to the CLI tool of your choosing. 
  
 
- If the option to dump all configurations to the screen is kept at the default 'no' the user will have to interactively decided what service and configuration group he wants to look at. 
+ If the option to dump all configurations to the screen is kept at the default 'no', the user must interactively decide what service and configuration group to look at. 
 
 ## Examples
 
@@ -58,17 +58,17 @@ optional arguments:
 
 The important phases of cluster-explore script
 
- * Acquiring Cloudera manager connection
+ * Acquiring the Cloudera Manager connection
  * Retrieving all the configurations for every service
  * Check --dump option
- * output all configurations to the screen or ask the user
+ * Output all configurations to the screen or prompt the user
 
 
 
 
 ### Running with minimal options
 
-This sample command prints all the Cloudera configurations to the command line
+This following command prints all the Cloudera configurations to the command line
 
 
 ```
@@ -106,7 +106,7 @@ config:
 
 ### Interactively
 
-Running interactively will produce the same output but for a specific configuration group like yarn node managers. Here is a sample of what it looks like interactively.
+Running the command interactively produces the same output, but for a specific configuration group like YARN node managers. Here is a sample of what it looks like interactively:
 
 ```
 $ cluster-explore --host CLOUDERA_HOST

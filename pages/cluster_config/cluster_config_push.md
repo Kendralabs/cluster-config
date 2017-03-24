@@ -4,7 +4,7 @@ tags: [push]
 keywords: push
 last_updated: March 17, 2017
 datatable: true
-summary: "cluster push will set all the calculated optimized configurations in Cloudera manager."
+summary: "cluster push will set all the calculated optimized configurations in Cloudera Manager."
 sidebar: cluster_config_sidebar
 permalink: cluster_config_push.html
 folder: cluster_config
@@ -12,11 +12,11 @@ folder: cluster_config
 
 ## Purpose
 
-The cluster-push command will allow you to save all the calculated configurations in Cloudera manager and if desired the cluster will be restarted.
+The cluster-push command allows you to save all the calculated configurations in Cloudera Manager and, if desired, restarts the cluster.
 
 ## Command line options
 
-Here are command line options for cluster-push.
+Here are command line options for cluster-push:
 
 ```shell
 $ cluster-push --help
@@ -56,32 +56,30 @@ optional arguments:
 
 ### Unique Options
 
-**cluster-push** only has three unique options
+**cluster-push** has three unique options, as follows:
  
  * **--update-cdh**: Whether you would like to update CDH configurations. Either yes or no. This is a required option.
  * **--restart-cdh**: Whether you would like to restart CDH after updating its configuration. Either yes or no. This is a required option.
  * **--conflict-merge**: Conflict resolution preference when encountering key conflicts between cdh.json and user-cdh.json. Defaults to user-cdh.json. Valid values [user, generated, interactive]
 
-The update-cdh and restart-cdh options exist mainly to make the user running tool aware of what they are doing. Since updating and restarting the cluster can be pretty destructive actions i wanted to administrator to acknowledge the update. 
+The update-cdh and restart-cdh options exist mainly to make the user running tool aware of what they are doing. Since updating and restarting the cluster can be fairly destructive actions i wanted to administrator must acknowledge these updates. 
 
 ## Examples
 
 ### Execution phases
 
-The important phases in the runing of a cluster push script are
+The important phases in the running of a cluster push script are:
 
- * Acquiring Cloudera manager connection
+ * Acquiring a Cloudera Manager connection
  * Retrieving all the configurations for every service
  * Reading cdh.json & user-cdh.json
- * Pushing the calculated configuration to Cloudera manager
+ * Pushing the calculated configuration to Cloudera Manager
  * Creating snapshots
-
-
 
 
 ### Running with minimal options
 
-This sample command pushes configurations to Cloudera manager that were saved in cdh.json from the cluster-generate command.
+This sample command pushes configurations to Cloudera Manager that were saved in cdh.json from the cluster-generate command.
 
 
 ```
@@ -130,7 +128,7 @@ What is the Cloudera manager password?
 --INFO Reading CDH config file: /cdh.json
 --INFO Reading user CDH config file: /user-cdh.json
 ```
-cluster-push will first try to open the json configuration files.
+**cluster-push** first tries to open the json configuration files.
 
 
 #### Saving configurations
@@ -146,7 +144,7 @@ cluster-push will first try to open the json configuration files.
 --INFO Updating config group: JOBHISTORY_BASE
 --INFO Updated 2 configuration/s.
 ```
-You will be notified with configuration updates with the configuration group name and the number of configurations that got updated. 
+You will be notified regarding configuration updates, with the configuration group name and the number of configurations that was updated. 
 
 
 #### Restarting the cluster
@@ -163,7 +161,7 @@ You will be notified with configuration updates with the configuration group nam
 --INFO Waiting for Restart
 --INFO Done with Restart.
 ```
-If you opted to restart the cluster the request will be sent to the server and polling will check its progress.
+If you opted to restart the cluster, the request is sent to the server and polling check's its progress.
 
 
 #### Saving snapshots
@@ -174,11 +172,12 @@ If you opted to restart the cluster the request will be sent to the server and p
 --INFO Snapshotting: /user-cdh.json 
 ```
 
-The following Snapshots of will be saved
+The following Snapshots of will be saved:
 
- * The calculated configurations, cdh.json.
- * All CDH configurations, before-ALL-CLUSTER-CONFIGURATIONS.json.
- * The formula used to calculate the configurations, formula.py. 
+ * The calculated configurations, cdh.json
+ * All CDH configurations, before-ALL-CLUSTER-CONFIGURATIONS.json
+ * The formula used to calculate the configurations, formula.py
 
 
-Snapshots come in handy when you need to compare configurations. The sorted json output allows for easy comparisons with command line tools like diff. Cloudera manager lets you see historical configuration changes by service while the snapshots will show changes across services.
+Snapshots come in handy when you need to compare configurations. The sorted JSON output allows for easy comparisons with command line tools like diff. 
+Cloudera Manager lets you see historical configuration changes by service, while the snapshots will show changes across services.

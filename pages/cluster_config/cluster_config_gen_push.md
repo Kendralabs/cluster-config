@@ -12,11 +12,12 @@ folder: cluster_config
 
 ## Purpose
 
-The cluster-gen-push command combines the functionality of cluster-generate and cluster-push. First the script will generate an optimized configuration and it will then set it in CDH. This is useful when you know the optimized service configurations work and there is no need to review them. 
+The cluster-gen-push command combines the functionality of cluster-generate and **cluster-push**. First the script generates an optimized configuration, and 
+then it sets the configuration in CDH. This is useful when you know the optimized service configurations work and there is no need to review them. 
 
 ## Command line options
 
-Here are command line options for cluster-push.
+Here are command line options for cluster-push:
 
 ```shell
 $ cluster-generate-push --help
@@ -67,16 +68,16 @@ optional arguments:
 
 ### Unique Options
 
-**cluster-generate-push** has all the unique options of cluster-generate and cluster-push
+**cluster-generate-push** has all the unique options of **cluster-generate** and **cluster-push**, as follows:
  
  * **formula** path to formula file if not using the default packaged formula.
  * **formula-args** path to formula arguments to tweak some of the formulas output.
  * **--update-cdh**: Whether you would like to update CDH configurations. Either yes or no. This is a required option.
  * **--restart-cdh**: Whether you would like to restart CDH after updating its configuration. Either yes or no. This is a required option.
- * **--conflict-merge**: Conflict resolution preference when encountering key conflicts between cdh.json and user-cdh.json. Defaults to user-cdh.json. Valid values [user, generated, interactive]
+ * **--conflict-merge**: Conflict resolution preference when encountering key conflicts between cdh.json and user-cdh.json. Defaults to user-cdh.json. Valid values are [user, generated, interactive]
 
 
 
 ## Examples
 
-for example look at cluster-generate cluster-push.
+See **cluster-generate** **cluster-push** for examples.

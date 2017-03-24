@@ -22,7 +22,7 @@ Configuration Snapshots | Takes a snapshot of all service configurations in Clou
 Configuration Rollback | Reverted to a previous known good configuration snapshot. 
 Explore Configurations | Browse all the service configurations from the command line. Easily grep all configurations to help find what you are looking for.
 Restart Cluster | Allows the restarting of the Cloudera cluster from the command line.
-User Configurations | you can set custom user configurations that are not part of formula calculations.
+User Configurations | Set custom user configurations that are not part of formula calculations.
 Pluggable formulas | Users can provide their own formulas to suit their needs and workloads.
 Flexible formulas | Optimization formulas can be modified at runtime. Formulas can be written to support multiple or single threads depending on the workload.
 
@@ -30,7 +30,7 @@ Flexible formulas | Optimization formulas can be modified at runtime. Formulas c
 
 ## Features not available
 
-The following features are not available but we are thinking about adding them at some point. If you interested in one issue versus another please voice your support so we can prioritize based on interest.
+The following features are not available, but we are thinking about adding them at some point. If you interested in one issue versus another, please voice your support so we can prioritize based on interest.
 
 
 Features | Notes
