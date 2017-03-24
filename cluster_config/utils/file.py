@@ -1,18 +1,18 @@
-import os
+import datetime
 import io
 import json
-import yaml
-import cluster_config as cc
-from cluster_config import log
-import cluster_config.cdh as cdh
-import time, datetime
+import os
 import shutil
+
+import yaml
+
+from cluster_config.utils.cli import log
 
 
 def file_path(file_name, path):
     """
     get the entire file path for file_name
-    :param file_name: The base file name, my_file.ext| myfile
+    :param file_name: The base file name, ie. my_file.ext| myfile
     :param path: some default path
     :return: full path with file name, path/file_name or working/directory/file_name
     """

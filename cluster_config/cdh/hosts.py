@@ -1,16 +1,23 @@
 from cm_api.endpoints import hosts
+from cluster_config.cdh import CDH
 
+class Hosts(CDH):
+    '''
+    Hosts is used for grouping many hosts. They will be grouped by role
+    '''
+    def __init__(self, cdh, hostId):
+        super(Hosts, self).set_resources(cdh)
 
-class Hosts(object):
-    def __init__(self, cdh_resource_root, hostId):
-        self._cdh_resource_root = None
         self._hosts = {}
 
-        self.cdh_resource_root = cdh_resource_root
         self.add(hostId)
 
     def add(self, hostId):
-        self.hosts[hostId] = hosts.get_host(self.cdh_resource_root, hostId)
+        '''
+        add an additional host
+        :param hostId: cmapi host id
+        '''
+        self.hosts[hostId] = hosts.get_host(self.cmapi_resource_root, hostId)
 
     def max_cores(self, physical=False):
         max = 0
@@ -23,6 +30,8 @@ class Hosts(object):
                     max = self.hosts[host].numCores
         return max
 
+
+    @property
     def max_memory(self):
         max = 0
         for host in self.hosts:
@@ -31,52 +40,51 @@ class Hosts(object):
 
         return max
 
+    @property
     def memory(self):
         memory = {}
         for key in self.hosts:
             memory[self.hosts[key].hostname] = self.hosts[key].totalPhysMemBytes
         return memory
 
+    @property
     def memoryTotal(self):
         memory = 0L
         for key in self.hosts:
             memory = memory + self.hosts[key].totalPhysMemBytes
         return memory
 
+    @property
     def virtualCoresTotal(self):
         cores = 0
         for key in self.hosts:
             cores = cores + self.hosts[key].numCores
         return cores
 
+    @property
     def physicalCoresTotal(self):
         cores = 0
         for key in self.hosts:
             cores = cores + self.hosts[key].numPhysicalCores
         return cores
 
+    @property
     def hostnames(self):
         nodes = []
         for host in self.hosts:
             nodes.append(self.hosts[host].hostname)
         return nodes
 
+    @property
     def ipAddresses(self):
         ips = []
         for host in self.hosts:
             ips.append(self.hosts[host].ipAddress)
         return ips
 
+    @property
     def all(self):
         return self.hosts
-
-    @property
-    def cdh_resource_root(self):
-        return self._cdh_resource_root
-
-    @cdh_resource_root.setter
-    def cdh_resource_root(self, cdh_resource_root):
-        self._cdh_resource_root = cdh_resource_root
 
     @property
     def hosts(self):

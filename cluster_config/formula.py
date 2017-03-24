@@ -1,14 +1,14 @@
 def constants(cluster, log):
-    """
+    '''
     Sets the constants needed for calculating the formula.
     :param cluster: Cluster configuration connection
     :param log: simple log interface with log.info, log.error, log.warning, log.fatal, log.debug
     :return: a dictionary with all constants
-    """
+    '''
     const = {
-        "NUM_NM_WORKERS": len(cluster.yarn.nodemanager.hosts.all()),
+        "NUM_NM_WORKERS": len(cluster.yarn.nodemanager.hosts.all),
         "NM_WORKER_CORES": cluster.yarn.nodemanager.hosts.max_cores(),
-        "NM_WORKER_MEM": cluster.yarn.nodemanager.hosts.max_memory(),
+        "NM_WORKER_MEM": cluster.yarn.nodemanager.hosts.max_memory,
         "MIN_NM_MEMORY": gb_to_bytes(8),
         # lambdas are cleaner
         "OVER_COMMIT_FACTOR": lambda x: x if x is not None and x >= 1 else 1,
@@ -44,10 +44,10 @@ def formula(cluster, log, constants):
     :param cluster: Cluster configuration connection
     :param  log: simple log interface with log.info, log.error, log.warning, log.fatal, log.debug
     :param constants: the calculated constants with any user overrides from formula-args
-    :return: a dictionary with cdh and atk configurations
+    :return: a dictionary with cdh configurations
     """
     cdh = {}
-    atk = {}
+
 
     # Validate user defined parameters in forumual-args.yaml file
     if (bytes_to_mb(constants["MAX_JVM_MEMORY"]) < constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"]):
@@ -59,16 +59,6 @@ def formula(cluster, log, constants):
                                                                          1 - constants["MEM_FRACTION_FOR_HBASE"]))
     constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_AM_MEMORY_MB"] * 0.10)
     constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"] = max(384, constants["MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB"] * 0.10)
-
-    ###### These values are gathered by the tool from Cluster ######
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxPermSize"] = \
-        "\"%dm\"" % (constants["SPARK_DRIVER_MAXPERMSIZE"])
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"] = \
-        "\"%d\"" % (constants["SPARK_YARN_DRIVER_MEMORYOVERHEAD"])
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"] = \
-        "\"%d\"" % (constants["SPARK_YARN_EXECUTOR_MEMORYOVERHEAD"])
 
     cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] = constants["NM_WORKER_CORES"]
 
@@ -172,40 +162,6 @@ def formula(cluster, log, constants):
 
     EXECUTORS_PER_THREAD = int((CONTAINERS_ACCROSS_CLUSTER - constants["NUM_THREADS"]) / constants["NUM_THREADS"])
 
-    if not constants["ENABLE_DYNAMIC_ALLOCATION_FOR_SPARK"]:
-        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.dynamicAllocation.enabled"] = "\"%s\"" % (
-            str(False).lower())
-        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.instances"] = EXECUTORS_PER_THREAD
-    else:
-        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.dynamicAllocation.enabled"] = "\"%s\"" % (
-            str(True).lower())
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.dynamicAllocation.minExecutors"] = "\"%s\"" % (1)
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.dynamicAllocation.maxExecutors"] = "\"%s\"" % (
-        CONTAINERS_ACCROSS_CLUSTER - constants["NUM_THREADS"])
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.memory"] = "\"%dm\"" % (
-
-        cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_MEMORY_MB"] - int(
-            atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.executor.memoryOverhead"].strip("\"")))
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.cores"] = "\"%s\"" % (str(1))
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.cores"] = "\"%s\"" % (
-        (cdh["YARN.NODEMANAGER.NODEMANAGER_BASE.YARN_NODEMANAGER_RESOURCE_CPU_VCORES"] * constants["NUM_NM_WORKERS"] -
-         constants["NUM_THREADS"]) / (constants["NUM_THREADS"] * EXECUTORS_PER_THREAD))
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.memory"] = "\"%dm\"" % (
-        cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_RESOURCE_MB"] - int(
-            atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.driver.memoryOverhead"].strip("\"")))
-
-    atk["trustedanalytics.atk.engine.auto-partitioner.broadcast-join-threshold"] = "\"2048MB\""
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.maxResultSize"] = "\"2g\""
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.io.preferDirectBufs"] = "\"%s\"" % (
-        str(False).lower())
 
     if (constants["ENABLE_SPARK_SHUFFLE_SERVICE"]):
         cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"] = \
@@ -223,18 +179,4 @@ def formula(cluster, log, constants):
         cdh["YARN.RESOURCEMANAGER.RESOURCEMANAGER_BASE.RESOURCEMANAGER_CONFIG_SAFETY_VALVE"] = \
             cdh["YARN.JOBHISTORY.JOBHISTORY_BASE.JOBHISTORY_CONFIG_SAFETY_VALVE"]
 
-        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.service.enabled"] = "\"%s\"" % (
-            str(True).lower())
-    else:
-        atk["trustedanalytics.atk.engine.spark.conf.properties.spark.shuffle.service.enabled"] = "\"%s\"" % (
-            str(False).lower())
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.yarn.am.waitTime"] = "\"%s\"" % ("3600s")
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.driver.extraJavaOptions"] = \
-        "\"-Xmx%sm\"" % (bytes_to_mb(cdh["YARN.GATEWAY.GATEWAY_BASE.YARN_APP_MAPREDUCE_AM_MAX_HEAP"]))
-
-    atk["trustedanalytics.atk.engine.spark.conf.properties.spark.executor.extrajavaoptions"] = \
-        "\"-Xmx%sm\"" % (bytes_to_mb(cdh["YARN.GATEWAY.GATEWAY_BASE.MAPREDUCE_MAP_JAVA_OPTS_MAX_HEAP"]))
-
-    return {"cdh": cdh, "atk": atk}
+    return {"cdh": cdh}

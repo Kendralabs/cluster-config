@@ -1,23 +1,25 @@
 import re
+
+import cluster_config.utils.log as log
 from cluster_config.cdh.config import Config
-import cluster_config.log as log
+from cluster_config.cdh import CDH
 
+class Config_Group(CDH):
+    def __init__(self, cdh, cdh_group):
+        super(Config_Group, self).set_resources(cdh)
 
-class Config_Group(object):
-    def __init__(self, cdh_service, cdh_group):
-        #cdh service object
-        self._cdh_service = None
-        #cdh config_group object
-        self._cdh_group = None
-        #cdh configs items
         self._cdh_configs = {}
+        '''cdh configurations '''
 
-        self.cdh_service = cdh_service
         self.cdh_group = cdh_group
+        '''cm-api config group'''
 
         self.__get_configs()
 
     def __get_configs(self):
+        '''
+        get all the config for this group from cm-api
+        '''
         for name, config in self.cdh_group.get_config(view='full').items():
             temp = Config(self.cdh_group, config)
             setattr(self, temp.name, temp)
@@ -25,10 +27,18 @@ class Config_Group(object):
 
 
     def __update(self):
+        '''
+        update the configurations for this config group
+        :return:
+        '''
         self.__get_configs()
 
     def set(self, configs):
-        #re key our configs to use actual CDH config key
+        '''
+        re key our configs to use actual CDH config key
+        :param configs: dictionary of configs that were parsed from json.
+        :return:
+        '''
         temp = {}
         for config in configs:
             if config in self.configs:
@@ -49,17 +59,9 @@ class Config_Group(object):
         find = re.compile('[A-Z]*-[A-Z]*$')
         found = find.search(self.cdh_group.name)
         if found is None:
-            return self.cdh_group.name.replace(self.cdh_service.name + "-", "").lower().replace("-", "_")
+            return self.cdh_group.name.replace(self.cmapi_service.name + "-", "").lower().replace("-", "_")
         else:
             return found.group().lower().replace("-", "_")
-
-    @property
-    def cdh_service(self):
-        return self._cdh_service
-
-    @cdh_service.setter
-    def cdh_service(self, cdh_service):
-        self._cdh_service = cdh_service
 
     @property
     def cdh_group(self):

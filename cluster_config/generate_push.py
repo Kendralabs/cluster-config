@@ -1,9 +1,10 @@
 from __future__ import print_function
+
 import argparse
-from cluster_config.cdh.cluster import Cluster
-from cluster_config import generate, push
 import datetime
 
+from cluster_config import generate, push
+from cluster_config.cdh.cluster import Cluster
 
 
 def cli(parser=None):
@@ -19,7 +20,7 @@ def cli(parser=None):
 def main():
     from cluster_config.cdh.cluster import Cluster
     #from cluster_config import push
-    from cluster_config.cli import parse
+    from cluster_config.utils.cli import parse
     args = parse(cli())
     cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
     run(args, cluster)

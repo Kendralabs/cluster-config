@@ -1,9 +1,8 @@
 import argparse
 
 import cluster_config as cc
-from cluster_config import log
-from cluster_config import file
-from cluster_config.cdh.cluster import Cluster, save_config
+from cluster_config.cdh.cluster import Cluster, save_to_json
+from cluster_config.utils import file, log
 
 
 def cli(parser=None):
@@ -26,7 +25,7 @@ def cli(parser=None):
 
 
 def main():
-    run(cc.cli.parse(cli()))
+    run(cc.utils.cli.parse(cli()))
 
 
 def run(args, cluster=None, dt=None):
@@ -34,7 +33,7 @@ def run(args, cluster=None, dt=None):
         cluster = Cluster(args.host, args.port, args.username, args.password, args.cluster)
 
     if cluster:
-        cluster_before = save_config(cluster, args.path, "before")
+        cluster_before = save_to_json(cluster, args.path, "before")
         #Read the generated configs
         cdh_config_path = file.file_path(cc.CDH_CONFIG, args.path)
         log.info("Reading CDH config file: {0}".format(cdh_config_path))
@@ -48,7 +47,7 @@ def run(args, cluster=None, dt=None):
         if user_configs:
             #merge config dictionaries and resolve conflicts
             log.info("conflict resolution: {0}".format(args.conflict_merge))
-            configs = cc.dict.merge_dicts(user_configs, cdh_configs, convert_conflict_merge(args.conflict_merge))
+            configs = cc.utils.dict.merge_dicts(user_configs, cdh_configs, convert_conflict_merge(args.conflict_merge))
             merged_config_path = file.file_path(cc.MERGED_CDH_CONFIG, args.path)
             log.info("Writting merged CDH config file: {0}".format(merged_config_path))
             file.write_json_conf(configs, merged_config_path)
@@ -61,8 +60,8 @@ def run(args, cluster=None, dt=None):
             #iterate through services, set cdh configs and possibly restart services
             cluster.update_configs(configs, False if args.restart_cdh == "no" else True)
 
-        cluster_after = save_config(cluster, args.path, "after")
-        file.snapshots(args.host, "push", args.path, dt, cluster_before, cluster_after,  cdh_config_path,
+        cluster_after = save_to_json(cluster, args.path, "after")
+        file.snapshots(args.host, "push", args.path, dt, cluster_before, cluster_after, cdh_config_path,
                        user_cdh_config_path, merged_config_path)
 
     else:
