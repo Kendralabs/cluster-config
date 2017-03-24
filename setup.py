@@ -24,7 +24,7 @@ setup(
     # Application author details:
 
     # Packages
-    packages=["cluster_config","cluster_config/cdh","cluster_config/tests"],
+    packages=["cluster_config","cluster_config/cdh","cluster_config/tests", "cluster_config/utils"],
 
     # Include additional files into the package
     include_package_data=True,
