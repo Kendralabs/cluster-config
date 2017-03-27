@@ -11,9 +11,11 @@ class CDH(object):
 
 
 
-    def __init__(self, host, port, username, password):
+    def __init__(self, host, port, username, password, cluster):
         self.cmapi_resource_root = None
         self.get_api_resource(host, port, username, password)
+        self.user_cluster_name = cluster
+        '''save the cluster name, might need if we have more than one cluster in cloudera manager'''
         self.cmapi_cluster = self.get_cluster()
 
     def set_resources(self, cdh):
@@ -24,27 +26,15 @@ class CDH(object):
         else:
             self.cmapi_service = None
 
-    """
-        def __init__(self, cmapi_resource_root, cmapi_cluster):
-            self.cmapi_resource_root = cmapi_resource_root
-            self.cmapi_cluster = cmapi_cluster
-            self.cmapi_service = None
-
-        def __init__(self, cmapi_resource_root, cmapi_cluster, cmapi_service):
-            self.cmapi_resource_root = cmapi_resource_root
-            self.cmapi_cluster = cmapi_cluster
-            self.cmapi_service = cmapi_service
-    """
-
     def get_api_resource(self, host, port, username, password):
         '''
-        Instantiate the cm_api resource, verify the host,port,username and password is not empty or None
+        Instantiate the cm_api resource, verify the host, port, username, and password is not empty or None
         :param host:
         :param port:
         :param username:
         :param password:
         '''
-        if host is None or host is "":
+        if not host:
             log.fatal("host init parameter can't be None or empty")
         if port is None or port is "":
             log.fatal("port init parameter can't be None or empty")

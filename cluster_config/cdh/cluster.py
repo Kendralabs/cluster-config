@@ -21,16 +21,8 @@ class Cluster(CDH):
         self.cdh_services = None
         '''will hold all the cluster services'''
 
-
-        self._user_cluster_name = None
-        '''users cluster name from the command line'''
-
-
-        super(Cluster, self).__init__(host, port, username, password)
+        super(Cluster, self).__init__(host, port, username, password, cluster)
         '''Get cm-api resource root'''
-
-        self.user_cluster_name = cluster
-        '''save the cluster name, might need if we have more than one cluster in cloudera manager'''
 
         #get cluster services
         self._set_services()

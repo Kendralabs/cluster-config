@@ -10,7 +10,7 @@ from cluster_config.cdh.role import Role
 
 class Service(CDH):
     '''
-    Single cmp-api service
+    Single Cloudera manager api service object
     '''
 
     def __init__(self, cdh, cdh_service):
@@ -38,7 +38,6 @@ class Service(CDH):
         #get all roles assigned to hosts
         #a role type will have mulitple hosts
         for role in self._get_cdh_roles():
-            print role.type
             if hasattr(self, role.type.lower()):
                 getattr(self, role.type.lower()).add(role)
             else:

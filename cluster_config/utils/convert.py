@@ -1,4 +1,7 @@
-
+'''
+methods for size conversions. Computations are usually done in bytes and conversions need to done to support the format
+ of a given field. Not all Configurations support bytes as input.
+'''
 def bytes_to_kb(bytes):
     return bytes_to_x(bytes, "KB")
 

@@ -1,5 +1,3 @@
-#provide pdoc html
-
 from cluster_config.utils import cli
 from cluster_config.utils import file
 from cluster_config.utils import log
