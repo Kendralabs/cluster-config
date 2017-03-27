@@ -36,11 +36,11 @@ class CDH(object):
         '''
         if not host:
             log.fatal("host init parameter can't be None or empty")
-        if port is None or port is "":
+        if not port:
             log.fatal("port init parameter can't be None or empty")
-        if username is None or username is "":
+        if not username:
             log.fatal("username init parameter can't be None or empty")
-        if password is None or password is "":
+        if not password:
             log.fatal("password init parameter can't be None or empty")
 
         #initialize cloudera manager connection
