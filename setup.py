@@ -19,12 +19,12 @@ setup(
     name="cluster_config",
 
     # Version number (initial):
-    version=u"0.1.0-{0}".format(os.environ.get("BUILD_NUMBER")) if os.environ.get("BUILD_NUMBER") else u"0",
+    version=u"0.1.0",
 
     # Application author details:
 
     # Packages
-    packages=["cluster_config","cluster_config/cdh","cluster_config/tests"],
+    packages=["cluster_config","cluster_config/cdh","cluster_config/tests", "cluster_config/utils"],
 
     # Include additional files into the package
     include_package_data=True,

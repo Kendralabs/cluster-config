@@ -9,8 +9,6 @@ class CDH(object):
     CDH base object class used to define common options needed to perform many of the cm-api requests.
     '''
 
-
-
     def __init__(self, host, port, username, password, cluster):
         self.cmapi_resource_root = None
         self.get_api_resource(host, port, username, password)

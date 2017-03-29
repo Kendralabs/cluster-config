@@ -34,6 +34,9 @@ class Service(CDH):
         return Role(self, role, role_type, role_name, active)
 
     def _get_roles(self):
+        '''
+        Get all the roles for this service including the ones not assigned to a host
+        '''
 
         #get all roles assigned to hosts
         #a role type will have mulitple hosts

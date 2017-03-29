@@ -21,17 +21,12 @@ MERGE_PREFIX = "merged"
 #CDH configuration file name
 CDH_CONFIG_NAME = "cdh"
 
-#ATK generated config name
-ATK_GENERATED_CONFIG_NAME = "generated"
 
 #CDH config file name
 CDH_CONFIG = "{0}.{1}".format(CDH_CONFIG_NAME, JSON_EXT)
 
 #user cdh config file name
 USER_CDH_CONFIG = "{0}-{1}.{2}".format(USER_PREFIX, CDH_CONFIG_NAME, JSON_EXT)
-
-#ATK generated config file name
-ATK_CONFIG = "{0}.{1}".format(ATK_GENERATED_CONFIG_NAME, HOCON_EXT)
 
 #merged file name
 MERGED_CDH_CONFIG = "{0}-{1}.{2}".format(MERGE_PREFIX, CDH_CONFIG_NAME, JSON_EXT)

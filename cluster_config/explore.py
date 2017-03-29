@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+import cluster_config as cc
 from cluster_config.cdh.cluster import Cluster
 
 
@@ -19,7 +20,7 @@ def cli(parser=None):
 
 
 def main():
-    run(cluster_config.utils.cli.parse(cli()))
+    run(cc.utils.cli.parse(cli()))
 
 
 def run(args, cluster=None):

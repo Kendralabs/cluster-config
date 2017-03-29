@@ -3,5 +3,6 @@ include cluster-generate
 include cluster-explore
 include cluster-config
 include cluster-push
+include formula-args.yaml.tpl
 include README.md
 include formula-args.yaml.tpl
