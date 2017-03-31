@@ -19,15 +19,12 @@ class Hosts(CDH):
         '''
         self.hosts[hostId] = hosts.get_host(self.cmapi_resource_root, hostId)
 
-    def max_cores(self, physical=False):
+    @property
+    def max_cores(self):
         max = 0
         for host in self.hosts:
-            if physical:
-                if self.hosts[host].numPhysicalCores > max:
-                    max = self.hosts[host].numPhysicalCores
-            else:
-                if self.hosts[host].numCores > max:
-                    max = self.hosts[host].numCores
+            if self.hosts[host].numCores > max:
+                max = self.hosts[host].numCores
         return max
 
 

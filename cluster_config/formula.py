@@ -22,7 +22,10 @@ def constants(cluster, log):
         "YARN_SCHEDULER_MINIMUM_ALLOCATION_MB": lambda x: x if x is not None and x >= 1024 else 1024,
         "MAPREDUCE_MINIMUM_AM_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024,
         "MAPREDUCE_MINIMUM_EXECUTOR_MEMORY_MB": lambda x: (x / 512) * 512 if x is not None and x >= 1024 else 1024,
-        "ENABLE_DYNAMIC_ALLOCATION_FOR_SPARK": lambda x: False if str(x).lower() == "false" else True
+        "ENABLE_DYNAMIC_ALLOCATION_FOR_SPARK": lambda x: False if str(x).lower() == "false" else True,
+        # Whether to use dynamic resource allocation, which scales the number of executors registered with this
+        # application up and down based on the workload
+        # https://spark.apache.org/docs/1.6.1/configuration.html#dynamic-allocation
     }
 
     if (const["NM_WORKER_MEM"] < (const["MIN_NM_MEMORY"])):
