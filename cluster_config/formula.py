@@ -7,7 +7,7 @@ def constants(cluster, log):
     '''
     const = {
         "NUM_NM_WORKERS": len(cluster.yarn.nodemanager.hosts.all),
-        "NM_WORKER_CORES": cluster.yarn.nodemanager.hosts.max_cores(),
+        "NM_WORKER_CORES": cluster.yarn.nodemanager.hosts.max_cores,
         "NM_WORKER_MEM": cluster.yarn.nodemanager.hosts.max_memory,
         "MIN_NM_MEMORY": gb_to_bytes(8),
         # lambdas are cleaner
